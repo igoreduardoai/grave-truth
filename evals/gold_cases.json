@@ -1,15 +1,413 @@
 [
-  {"id": "eob-responsibility", "app": "eob", "question": "What is the patient responsibility?", "expect": "cited", "must_include": ["$42.15"]},
-  {"id": "eob-deductible", "app": "eob", "question": "How much remaining deductible is left?", "expect": "cited", "must_include": ["$150.00"]},
-  {"id": "eob-allowed", "app": "eob", "question": "What is the plan allowed amount?", "expect": "cited", "must_include": ["$180.00"]},
-  {"id": "eob-coinsurance", "app": "eob", "question": "What patient coinsurance percentage was used?", "expect": "cited", "must_include": ["20%"]},
-  {"id": "eob-provider", "app": "eob", "question": "Who is the provider on this explanation of benefits?", "expect": "cited", "must_include": ["Riverside Clinic"]},
-  {"id": "eob-missing-penalty", "app": "eob", "question": "What is the out-of-network penalty?", "expect": "not_found"},
-  {"id": "eob-hallucinated-balance", "app": "eob", "question": "Is the patient responsibility $99999.00?", "expect": "reject_ungrounded"},
-  {"id": "lease-late-fee", "app": "lease", "question": "What late fee applies if rent arrives after the fifth day?", "expect": "cited", "must_include": ["$75.00"]},
-  {"id": "lease-rent", "app": "lease", "question": "What is the monthly rent?", "expect": "cited", "must_include": ["$1,850.00"]},
-  {"id": "lease-notice", "app": "lease", "question": "How many days written notice are required to terminate?", "expect": "cited", "must_include": ["30 days"]},
-  {"id": "lease-pets", "app": "lease", "question": "Are pets allowed without written approval?", "expect": "cited", "must_include": ["Pets are not allowed"]},
-  {"id": "lease-missing-parking", "app": "lease", "question": "How much is the reserved parking fee?", "expect": "not_found"},
-  {"id": "lease-hallucinated-rent", "app": "lease", "question": "Is monthly rent $50000.00?", "expect": "reject_ungrounded"}
+  {
+    "id": "eob-responsibility",
+    "app": "eob",
+    "question": "What is the patient responsibility?",
+    "expect": "cited",
+    "must_include": ["$42.15"],
+    "citation_groups": [["patient responsibility", "$42.15"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-deductible",
+    "app": "eob",
+    "question": "How much remaining deductible is left?",
+    "expect": "cited",
+    "must_include": ["$150.00"],
+    "citation_groups": [["deductible", "$150.00"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-allowed",
+    "app": "eob",
+    "question": "What is the plan allowed amount?",
+    "expect": "cited",
+    "must_include": ["$180.00"],
+    "citation_groups": [["allowed amount", "$180.00"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-coinsurance",
+    "app": "eob",
+    "question": "What patient coinsurance percentage was used?",
+    "expect": "cited",
+    "must_include": ["20%"],
+    "citation_groups": [["coinsurance", "20%"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-provider",
+    "app": "eob",
+    "question": "Who is the provider on this explanation of benefits?",
+    "expect": "cited",
+    "must_include": ["Riverside Clinic"],
+    "citation_groups": [["Riverside Clinic"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-billed",
+    "app": "eob",
+    "question": "What is the billed amount?",
+    "expect": "cited",
+    "must_include": ["$240.00"],
+    "citation_groups": [["billed amount", "$240.00"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-plan-paid",
+    "app": "eob",
+    "question": "How much did the plan pay?",
+    "expect": "cited",
+    "must_include": ["$137.85"],
+    "citation_groups": [["plan paid", "$137.85"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-service-date",
+    "app": "eob",
+    "question": "What is the service date?",
+    "expect": "cited",
+    "must_include": ["12 March 2026"],
+    "citation_groups": [["service date", "12 March 2026"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-claim-number",
+    "app": "eob",
+    "question": "What is the claim number?",
+    "expect": "cited",
+    "must_include": ["CLM-20481"],
+    "citation_groups": [["claim number", "CLM-20481"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-doctor-alias",
+    "app": "eob",
+    "question": "Who is the doctor on this visit?",
+    "expect": "cited",
+    "must_include": ["Riverside Clinic"],
+    "citation_groups": [["provider", "Riverside Clinic"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-visit-date",
+    "app": "eob",
+    "question": "When was the demo visit?",
+    "expect": "cited",
+    "must_include": ["12 March 2026"],
+    "citation_groups": [["demo visit", "12 March 2026"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-number-lookup",
+    "app": "eob",
+    "question": "What is $42.15?",
+    "expect": "cited",
+    "must_include": ["patient responsibility"],
+    "citation_groups": [["patient responsibility", "$42.15"]],
+    "max_citations": 1
+  },
+  {
+    "id": "eob-paid-and-responsibility",
+    "app": "eob",
+    "question": "What did the plan pay, and what is the patient responsibility?",
+    "expect": "cited",
+    "must_include": ["$137.85", "$42.15"],
+    "citation_groups": [["plan paid", "$137.85"], ["patient responsibility", "$42.15"]],
+    "min_citations": 2
+  },
+  {
+    "id": "lease-late-fee",
+    "app": "lease",
+    "question": "What late fee applies if rent arrives after the fifth day?",
+    "expect": "cited",
+    "must_include": ["$75.00"],
+    "citation_groups": [["late fee", "$75.00"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-rent",
+    "app": "lease",
+    "question": "What is the monthly rent?",
+    "expect": "cited",
+    "must_include": ["$1,850.00"],
+    "citation_groups": [["Monthly rent", "$1,850.00"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-notice",
+    "app": "lease",
+    "question": "How many days written notice are required to terminate?",
+    "expect": "cited",
+    "must_include": ["30 days"],
+    "citation_groups": [["30 days", "written notice"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-pets",
+    "app": "lease",
+    "question": "Are pets allowed without written approval?",
+    "expect": "cited",
+    "must_include": ["Pets are not allowed"],
+    "citation_groups": [["Pets are not allowed", "written approval"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-deposit",
+    "app": "lease",
+    "question": "What is the security deposit?",
+    "expect": "cited",
+    "must_include": ["$1,850.00"],
+    "citation_groups": [["security deposit", "$1,850.00", "not rent"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-smoking",
+    "app": "lease",
+    "question": "Is smoking allowed?",
+    "expect": "cited",
+    "must_include": ["Smoking is prohibited"],
+    "citation_groups": [["Smoking is prohibited"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-unit",
+    "app": "lease",
+    "question": "Where is unit 4B?",
+    "expect": "cited",
+    "must_include": ["200 Harbor Street"],
+    "citation_groups": [["unit 4B", "200 Harbor Street"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-term-begin",
+    "app": "lease",
+    "question": "When does the lease begin?",
+    "expect": "cited",
+    "must_include": ["1 April 2026"],
+    "citation_groups": [["begins", "1 April 2026"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-term-end",
+    "app": "lease",
+    "question": "When does the lease end?",
+    "expect": "cited",
+    "must_include": ["31 March 2027"],
+    "citation_groups": [["ends", "31 March 2027"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-guests",
+    "app": "lease",
+    "question": "How many consecutive days may a guest stay?",
+    "expect": "cited",
+    "must_include": ["7 consecutive days"],
+    "citation_groups": [["Guests", "7 consecutive days"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-renter-terminate",
+    "app": "lease",
+    "question": "How can a renter terminate?",
+    "expect": "cited",
+    "must_include": ["30 days"],
+    "citation_groups": [["terminate", "30 days"]],
+    "max_citations": 1
+  },
+  {
+    "id": "lease-shared-amount",
+    "app": "lease",
+    "question": "What is $1,850.00?",
+    "expect": "cited",
+    "must_include": ["$1,850.00"],
+    "citation_groups": [["Monthly rent", "$1,850.00"], ["security deposit", "$1,850.00"]],
+    "min_citations": 2
+  },
+  {
+    "id": "eob-missing-penalty",
+    "app": "eob",
+    "question": "What is the out-of-network penalty?",
+    "expect": "not_found"
+  },
+  {
+    "id": "eob-missing-copay",
+    "app": "eob",
+    "question": "What is the MRI copay?",
+    "expect": "not_found"
+  },
+  {
+    "id": "eob-missing-auth",
+    "app": "eob",
+    "question": "What prior authorization number was issued?",
+    "expect": "not_found"
+  },
+  {
+    "id": "eob-missing-employer",
+    "app": "eob",
+    "question": "Who is the patient's employer?",
+    "expect": "not_found"
+  },
+  {
+    "id": "eob-missing-ambulance",
+    "app": "eob",
+    "question": "What was the ambulance charge?",
+    "expect": "not_found"
+  },
+  {
+    "id": "lease-missing-parking",
+    "app": "lease",
+    "question": "How much is the reserved parking fee?",
+    "expect": "not_found"
+  },
+  {
+    "id": "lease-missing-utilities",
+    "app": "lease",
+    "question": "Are utilities included?",
+    "expect": "not_found"
+  },
+  {
+    "id": "lease-missing-sublet",
+    "app": "lease",
+    "question": "Is subletting allowed?",
+    "expect": "not_found"
+  },
+  {
+    "id": "lease-missing-waterbed",
+    "app": "lease",
+    "question": "Is a waterbed allowed?",
+    "expect": "not_found"
+  },
+  {
+    "id": "eob-hallucinated-balance",
+    "app": "eob",
+    "question": "Is the patient responsibility $99999.00?",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-swapped-billed",
+    "app": "eob",
+    "question": "The billed amount is $180.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-swapped-responsibility",
+    "app": "eob",
+    "question": "The patient responsibility is $150.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-swapped-paid",
+    "app": "eob",
+    "question": "The plan paid $240.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-wrong-coinsurance",
+    "app": "eob",
+    "question": "The patient coinsurance is 80%.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-fake-claim-number",
+    "app": "eob",
+    "question": "The claim number is CLM-99999.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-partial-invented",
+    "app": "eob",
+    "question": "The patient responsibility is $42.15 and the remaining deductible is $999.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "lease-hallucinated-rent",
+    "app": "lease",
+    "question": "Is monthly rent $50000.00?",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "lease-swapped-deposit",
+    "app": "lease",
+    "question": "The security deposit is $75.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "lease-wrong-notice",
+    "app": "lease",
+    "question": "Termination requires 60 days written notice.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "lease-mixed-fee",
+    "app": "lease",
+    "question": "Monthly rent is $1,850.00 and the late fee is $500.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "lease-rent-as-late-fee",
+    "app": "lease",
+    "question": "Monthly rent is $75.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "eob-accept-responsibility",
+    "app": "eob",
+    "question": "The patient responsibility is $42.15.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "eob-accept-responsibility-plain",
+    "app": "eob",
+    "question": "The patient responsibility is 42.15.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "eob-accept-allowed",
+    "app": "eob",
+    "question": "The plan allowed amount is $180.00.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "eob-accept-coinsurance",
+    "app": "eob",
+    "question": "The patient coinsurance is 20%.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "eob-accept-claim-number",
+    "app": "eob",
+    "question": "The claim number is CLM-20481.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "lease-accept-rent",
+    "app": "lease",
+    "question": "Monthly rent is $1,850.00.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "lease-accept-rent-plain",
+    "app": "lease",
+    "question": "Monthly rent is 1850.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "lease-accept-late-fee",
+    "app": "lease",
+    "question": "The late fee is $75.00.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "lease-accept-deposit",
+    "app": "lease",
+    "question": "The security deposit is $1,850.00.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "lease-accept-notice",
+    "app": "lease",
+    "question": "Termination requires 30 days written notice.",
+    "expect": "accept_grounded"
+  }
 ]

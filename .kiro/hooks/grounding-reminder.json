@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "remind-grounding-on-skeleton-edit",
+      "description": "After the citation skeleton changes, steer the agent back to spans, abstention, and the gold suite.",
+      "trigger": "PostFileSave",
+      "matcher": "src/grave_truth/skeleton\\.py$",
+      "action": {
+        "type": "agent",
+        "prompt": "skeleton.py changed. Follow .kiro/steering/no-invention.md. Answers quote a source span or say not found. A number from one clause must not support a different subject. Do not invent dollar amounts, percents, dates, or ids. Run python3 evals/run_evals.py and python3 -m pytest. Keep cited, not-found, reject, and accept cases green."
+      }
+    }
+  ]
+}

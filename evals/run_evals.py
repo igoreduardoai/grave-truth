@@ -5,37 +5,40 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 from grave_truth.apps import eob, lease
+from grave_truth.grading import evaluate_case
 
 ROOT = Path(__file__).resolve().parent
 CASES = json.loads((ROOT / "gold_cases.json").read_text(encoding="utf-8"))
 
 
 def _agent(app: str):
-    return eob.load_agent() if app == "eob" else lease.load_agent()
+    if app == "eob":
+        return eob.load_agent()
+    if app == "lease":
+        return lease.load_agent()
+    raise ValueError(f"unknown app {app}")
 
 
 def main() -> int:
     failed = 0
+    counts: Counter[str] = Counter()
     for case in CASES:
-        agent = _agent(case["app"])
-        if case["expect"] == "reject_ungrounded":
-            ok = agent.reject_ungrounded_claim(case["question"]) is True
-        else:
-            result = agent.answer(case["question"])
-            if case["expect"] == "not_found":
-                ok = result.found is False and result.text == "not found"
-            else:
-                ok = result.found and bool(result.citations)
-                for needle in case.get("must_include", []):
-                    ok = ok and (needle in result.text or any(needle in c.span for c in result.citations))
+        counts[case["expect"]] += 1
+        ok, detail = evaluate_case(case, _agent(case["app"]))
         status = "PASS" if ok else "FAIL"
         if not ok:
             failed += 1
-        print(f"{status}  {case['id']}")
-    print(f"{len(CASES) - failed}/{len(CASES)} passed")
+            print(f"{status}  {case['id']}  {detail}")
+        else:
+            print(f"{status}  {case['id']}")
+    passed = len(CASES) - failed
+    print(f"{passed}/{len(CASES)} passed")
+    summary = ", ".join(f"{name} {counts[name]}" for name in sorted(counts))
+    print(summary)
     return 1 if failed else 0
 
 

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "gold-evals-on-save",
+      "description": "Re-run gold-case evals after the agent edits the skeleton, fixtures, or evals.",
+      "trigger": "PostFileSave",
+      "matcher": "(src/grave_truth/.*\\.py|evals/.*|fixtures/.*\\.txt)$",
+      "timeout": 120,
+      "action": {
+        "type": "command",
+        "command": "python3 evals/run_evals.py"
+      }
+    }
+  ]
+}

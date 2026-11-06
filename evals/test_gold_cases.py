@@ -1,7 +1,9 @@
 import json
+from collections import Counter
 from pathlib import Path
 
 from grave_truth.apps import eob, lease
+from grave_truth.grading import evaluate_case
 
 CASES = json.loads((Path(__file__).parent / "gold_cases.json").read_text(encoding="utf-8"))
 
@@ -11,18 +13,12 @@ def _agent(app: str):
 
 
 def test_gold_cases_all_pass():
-    assert len(CASES) >= 10
+    counts = Counter(case["expect"] for case in CASES)
+    assert len(CASES) >= 24
+    assert counts["cited"] >= 10
+    assert counts["not_found"] >= 4
+    assert counts["reject_ungrounded"] >= 4
+    assert counts["accept_grounded"] >= 3
     for case in CASES:
-        agent = _agent(case["app"])
-        if case["expect"] == "reject_ungrounded":
-            assert agent.reject_ungrounded_claim(case["question"]) is True, case["id"]
-            continue
-        result = agent.answer(case["question"])
-        if case["expect"] == "not_found":
-            assert result.found is False, case["id"]
-            assert result.text == "not found", case["id"]
-            continue
-        assert result.found, case["id"]
-        assert result.citations, case["id"]
-        for needle in case.get("must_include", []):
-            assert needle in result.text or any(needle in c.span for c in result.citations), case["id"]
+        ok, detail = evaluate_case(case, _agent(case["app"]))
+        assert ok, f"{case['id']}: {detail}"

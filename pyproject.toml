@@ -1,6 +1,6 @@
 [project]
 name = "grave-truth"
-version = "0.1.0"
+version = "0.2.0"
 description = "Citation-grounded document-agent skeleton (Kiroween 2026 — Grave Truth)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -9,6 +9,16 @@ authors = [{ name = "Igor Eduardo" }]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[project.scripts]
+grave-truth = "grave_truth.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "evals"]

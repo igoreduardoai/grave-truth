@@ -1,60 +1,124 @@
 # Grave Truth
 
-A lean skeleton for citation-grounded document agents, built for [Kiroween 2026](https://kiroween.devpost.com/) in the Skeleton Crew spirit: every answer cites a source span or says `not found`. Two demo apps share the same skeleton — a synthetic medical bill / EOB explainer and a synthetic lease clause checker.
+A citation-grounded document-agent skeleton for [Kiroween 2026](https://kiroween.devpost.com/), Skeleton Crew. Every answer quotes a source span or says `not found`. A number from one clause cannot support a different subject.
 
-This is a research demo. It is not a medical device and not legal advice. Documents in `fixtures/` are synthetic.
+Two applications share that skeleton:
 
-## How it works
+| App | Folder | Loader | Fixture |
+|---|---|---|---|
+| EOB explainer | `eob-explainer/` | `grave_truth.apps.eob` | `fixtures/sample_eob.txt` |
+| Lease checker | `lease-checker/` | `grave_truth.apps.lease` | `fixtures/sample_lease.txt` |
 
-1. `DocumentAgent.ingest` stores a document and splits it into sentence spans.
-2. `retrieve` ranks spans by token overlap with the question.
-3. `answer` quotes only those spans. Numbers that do not appear in the spans never enter the answer.
-4. `reject_ungrounded_claim` flags a proposed claim when it invents a number (the “ghost”).
+The library is `src/grave_truth`. The folders above are the two apps. They do not copy the ranker.
 
-Uncited claims do not survive as answers (`GroundedAnswer.ghost`).
+This is a research demo. It is not a medical device and not legal advice. Documents in `fixtures/` are synthetic. There is no real PHI and no real lease.
 
-## Apps
+## How to run
 
-| App | Module | Fixture |
-|---|---|---|
-| EOB explainer | `grave_truth.apps.eob` | `fixtures/sample_eob.txt` |
-| Lease checker | `grave_truth.apps.lease` | `fixtures/sample_lease.txt` |
+Python 3.11 or newer. From the repo root:
+
+```bash
+python3 -m pip install -e ".[dev]"
+python3 evals/run_evals.py
+python3 -m pytest
+```
+
+Offline demo (no model API, no network):
+
+```bash
+python3 -m grave_truth eob "What is the patient responsibility?"
+python3 -m grave_truth lease "What is the security deposit?"
+python3 -m grave_truth reject eob "The billed amount is $180.00."
+python3 eob-explainer/main.py
+python3 lease-checker/main.py "How many days written notice are required to terminate?"
+```
+
+`eob` and `lease` with no question use a built-in demo question. `file <path> "<question>"` answers from any local text file. `--json` prints the same result as JSON.
+
+```text
+App: lease
+Question: What is the security deposit?
+Found: yes
+Ghost: no
+Answer: The security deposit is $1,850.00 and is not rent.
+Citations:
+- sample-lease [314:364] The security deposit is $1,850.00 and is not rent.
+```
+
+Rent is also `$1,850.00`. The citation is the deposit sentence, including "not rent". A claim that the deposit is the late fee (`$75.00`) is rejected. A question the fixture never mentions, such as an out-of-network penalty, is `not found`.
 
 ```python
 from grave_truth.apps import eob
 
 result = eob.explain("What is the patient responsibility?")
-print(result.text, result.citations[0].span)
+print(result.text)
+print(result.citations[0].span)
 ```
+
+## How it works
+
+1. `DocumentAgent.ingest` stores a document and splits it into sentence spans. Ingesting the same id again replaces those spans.
+2. `retrieve` ranks spans by token overlap. Boilerplate such as "explanation of benefits" does not outvote a subject word. A question that names a subject the file does not contain returns no spans.
+3. `answer` quotes the winning span, or two spans when the question covers two subjects. A bare shared amount cites each clause that contains it. Every number in the answer text is in a cited span. Offsets slice the source.
+4. `reject_ungrounded_claim` returns true when a number or id (`CLM-20481`) is missing, or when the number sits in a different clause. `$1,850.00` and `1850` are the same value. `20%` is not `20`.
+
+Uncited claims do not survive as answers (`GroundedAnswer.ghost`).
+
+A few question-side aliases (`doctor` → `provider`, `renter` → `resident`, `termination` → `terminate`) only help retrieval. The printed answer is still the original sentence.
 
 ## Kiro workflow
 
-The `/.kiro` directory is part of the repo (it is not gitignored):
+`/.kiro` is part of the repo. It is not gitignored.
 
-- `.kiro/specs/grave-truth.md` — product spec
-- `.kiro/steering/no-invention.md` — no guessed numbers or citations
-- `.kiro/hooks/run-evals.json` — hook that runs `python evals/run_evals.py` (meant to fire on save in the Kiro IDE)
+Specs (requirements, design, tasks):
 
-This tree documents the spec-driven workflow even when the code is run outside Kiro.
+- `.kiro/specs/grave-truth.md` — overview
+- `.kiro/specs/citation-grounding/` — spans, abstention, rejection
+- `.kiro/specs/demo-apps/` — the two app folders and the CLI
+
+Steering in `.kiro/steering/`:
+
+- `no-invention.md`, `product.md`, `tech.md`, `structure.md` load always
+- `testing-gold-cases.md` and `fixture-safety.md` load by file match
+- `add-gold-case.md` loads automatically when eval work is in context
+- `demo-walkthrough.md` is manual (`#demo-walkthrough`)
+
+Hooks in `.kiro/hooks/`:
+
+- `run-evals.json` — original on-save hook that runs the gold suite
+- `evals-on-save.json` — Kiro v1 `PostFileSave` command hook for the same suite
+- `pytest-on-save.json` — v1 command hook for pytest
+- `grounding-reminder.json` — v1 agent prompt after `skeleton.py` changes
+- `block-secret-files.json` — v1 `PreToolUse` command that exits 2 for `.env`, key, and `secrets/` paths (`scripts/kiro_guard_no_secrets.py`)
+
+Run the hook command locally with `python3 evals/run_evals.py`.
 
 ## Eval results
 
-Gold cases live in `evals/gold_cases.json` (13 cases: cited-correct, not-found, and hallucination rejection).
+Gold cases live in `evals/gold_cases.json`.
 
-```bash
-pip install -e ".[dev]"
-python evals/run_evals.py
-pytest
-```
+| Expectation | Cases |
+|---|---|
+| cited | 25 |
+| not_found | 9 |
+| reject_ungrounded | 12 |
+| accept_grounded | 10 |
+| **Total** | **56** |
 
-Last local run (2026-11-06): `python evals/run_evals.py` → **13/13 passed**; `pytest` → **6 passed**.
+Last local run (2026-11-06):
+
+- `python3 evals/run_evals.py` → **56/56 passed** (cited 25, not_found 9, reject_ungrounded 12, accept_grounded 10)
+- `python3 -m pytest` → **26 passed**
 
 ## Limits
 
-- Retrieval is lexical, not a hosted model. That keeps the demo offline and inspectable.
-- One short synthetic document per app.
-- No insurer, clinic, or landlord customers have used this software.
+- Research demo. Not a medical device. Not legal advice. Not a coverage decision and not a contract review.
+- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing.
+- Citations are sentences. A sentence that contains two dates is quoted whole.
+- The agent quotes the file. It does not know whether the file is true outside that file.
+- One synthetic document per app. No insurer, clinic, or landlord has used this software.
+- Same numeric value with different `$` / comma formatting counts as one number. A different value is rejected even if it appears next to another subject.
 
 ## License
 
-MIT. Built as a new project after 30 October 2026 for Kiroween. Affiliation: Igor Eduardo, Founder in Residence, Antler.
+MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler. Cortexa Social Inc.

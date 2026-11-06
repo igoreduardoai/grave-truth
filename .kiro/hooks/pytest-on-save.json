@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "pytest-on-save",
+      "description": "Run the pytest suite after the agent edits library code or tests.",
+      "trigger": "PostFileSave",
+      "matcher": "(src/grave_truth/.*\\.py|tests/.*\\.py|evals/.*\\.py)$",
+      "timeout": 120,
+      "action": {
+        "type": "command",
+        "command": "python3 -m pytest -q"
+      }
+    }
+  ]
+}
