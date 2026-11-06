@@ -1,0 +1,15 @@
+[
+  {"id": "eob-responsibility", "app": "eob", "question": "What is the patient responsibility?", "expect": "cited", "must_include": ["$42.15"]},
+  {"id": "eob-deductible", "app": "eob", "question": "How much remaining deductible is left?", "expect": "cited", "must_include": ["$150.00"]},
+  {"id": "eob-allowed", "app": "eob", "question": "What is the plan allowed amount?", "expect": "cited", "must_include": ["$180.00"]},
+  {"id": "eob-coinsurance", "app": "eob", "question": "What patient coinsurance percentage was used?", "expect": "cited", "must_include": ["20%"]},
+  {"id": "eob-provider", "app": "eob", "question": "Who is the provider on this explanation of benefits?", "expect": "cited", "must_include": ["Riverside Clinic"]},
+  {"id": "eob-missing-penalty", "app": "eob", "question": "What is the out-of-network penalty?", "expect": "not_found"},
+  {"id": "eob-hallucinated-balance", "app": "eob", "question": "Is the patient responsibility $99999.00?", "expect": "reject_ungrounded"},
+  {"id": "lease-late-fee", "app": "lease", "question": "What late fee applies if rent arrives after the fifth day?", "expect": "cited", "must_include": ["$75.00"]},
+  {"id": "lease-rent", "app": "lease", "question": "What is the monthly rent?", "expect": "cited", "must_include": ["$1,850.00"]},
+  {"id": "lease-notice", "app": "lease", "question": "How many days written notice are required to terminate?", "expect": "cited", "must_include": ["30 days"]},
+  {"id": "lease-pets", "app": "lease", "question": "Are pets allowed without written approval?", "expect": "cited", "must_include": ["Pets are not allowed"]},
+  {"id": "lease-missing-parking", "app": "lease", "question": "How much is the reserved parking fee?", "expect": "not_found"},
+  {"id": "lease-hallucinated-rent", "app": "lease", "question": "Is monthly rent $50000.00?", "expect": "reject_ungrounded"}
+]

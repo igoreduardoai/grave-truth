@@ -1,0 +1,4 @@
+This is a synthetic explanation of benefits for a demo visit on 12 March 2026.
+The provider is Riverside Clinic. The billed amount is $240.00.
+The plan allowed amount is $180.00. The plan paid $137.85 after the patient coinsurance of 20%.
+The patient responsibility is $42.15. The remaining deductible is $150.00.

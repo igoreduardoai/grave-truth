@@ -1,0 +1,7 @@
+{
+  "name": "run-evals",
+  "description": "Run the Grave Truth gold-case eval suite (designed to fire on save in Kiro).",
+  "when": "onSave",
+  "command": "python evals/run_evals.py",
+  "steering": [".kiro/steering/no-invention.md"]
+}

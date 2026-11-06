@@ -1,0 +1,15 @@
+[project]
+name = "grave-truth"
+version = "0.1.0"
+description = "Citation-grounded document-agent skeleton (Kiroween 2026 — Grave Truth)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Igor Eduardo" }]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "evals"]
+pythonpath = ["src"]
