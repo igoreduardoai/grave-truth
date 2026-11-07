@@ -9,4 +9,4 @@ python3 eob-explainer/main.py
 python3 eob-explainer/main.py "How much did the plan pay?"
 ```
 
-Run these from the repository root. The script uses the shared skeleton in `src/grave_truth`.
+Run these from the repository root. The script uses the shared skeleton in `src/grave_truth`. The haunted demo in `demos/haunted/` uses this same loader.

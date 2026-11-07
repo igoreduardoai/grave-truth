@@ -2,6 +2,8 @@
 
 A citation-grounded document-agent skeleton for [Kiroween 2026](https://kiroween.devpost.com/), Skeleton Crew. Every answer quotes a source span or says `not found`. A number from one clause cannot support a different subject.
 
+Skeleton Crew here means two applications on one library, with the specs, steering, and hooks committed in `.kiro` (that directory is not gitignored). The haunted page is a third view of the same library. It does not carry a second ranker.
+
 Two applications share that skeleton:
 
 | App | Folder | Loader | Fixture |
@@ -31,7 +33,13 @@ python3 -m grave_truth lease "What is the security deposit?"
 python3 -m grave_truth reject eob "The billed amount is $180.00."
 python3 eob-explainer/main.py
 python3 lease-checker/main.py "How many days written notice are required to terminate?"
+python3 scripts/demo_walkthrough.py
+python3 demos/haunted/server.py
 ```
+
+`scripts/demo_walkthrough.py` prints a judge transcript for both apps: question, answer, quote span, and pass/fail. It exits 0 when every gold case passes. Run it before treating the demo as working.
+
+`demos/haunted/server.py` binds to `127.0.0.1` and prints a localhost URL. Open that URL. Uncited claims fade. A cited answer highlights the source clause in the fixture. The page posts to that process, which calls `DocumentAgent`. No paid API. `python3 -m http.server` from `demos/haunted/` only serves the static files; it does not answer questions.
 
 `eob` and `lease` with no question use a built-in demo question. `file <path> "<question>"` answers from any local text file. `--json` prints the same result as JSON.
 
@@ -90,8 +98,9 @@ Hooks in `.kiro/hooks/`:
 - `pytest-on-save.json` — v1 command hook for pytest
 - `grounding-reminder.json` — v1 agent prompt after `skeleton.py` changes
 - `block-secret-files.json` — v1 `PreToolUse` command that exits 2 for `.env`, key, and `secrets/` paths (`scripts/kiro_guard_no_secrets.py`)
+- `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough before claiming the demo works
 
-Run the hook command locally with `python3 evals/run_evals.py`.
+Run the hook command locally with `python3 evals/run_evals.py`. The demo check is `python3 scripts/demo_walkthrough.py`.
 
 ## Eval results
 
@@ -99,21 +108,25 @@ Gold cases live in `evals/gold_cases.json`.
 
 | Expectation | Cases |
 |---|---|
-| cited | 25 |
-| not_found | 9 |
-| reject_ungrounded | 12 |
-| accept_grounded | 10 |
-| **Total** | **56** |
+| cited | 33 |
+| not_found | 17 |
+| reject_ungrounded | 18 |
+| accept_grounded | 22 |
+| **Total** | **90** |
 
-Last local run (2026-11-06):
+Last local run (2026-11-07):
 
-- `python3 evals/run_evals.py` → **56/56 passed** (cited 25, not_found 9, reject_ungrounded 12, accept_grounded 10)
-- `python3 -m pytest` → **26 passed**
+- `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22)
+- `python3 -m pytest` → **31 passed**
+- `python3 scripts/demo_walkthrough.py` → exit 0, `passed 90/90` (accept_grounded 22, cited 33, not_found 17, reject_ungrounded 18)
+
+The gold-case table matches `evals/gold_cases.json`. Counts above are from the local run on 2026-11-07.
 
 ## Limits
 
 - Research demo. Not a medical device. Not legal advice. Not a coverage decision and not a contract review.
-- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing.
+- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches.
+- The pharmacy charge (`$18.40`) and the patient responsibility (`$42.15`) are different clauses. The late fee (`$75.00`) is not monthly rent (`$1,850.00`). Same value with a different `$` or comma form still counts as that value.
 - Citations are sentences. A sentence that contains two dates is quoted whole.
 - The agent quotes the file. It does not know whether the file is true outside that file.
 - One synthetic document per app. No insurer, clinic, or landlord has used this software.

@@ -18,3 +18,14 @@
   - Keep the original EOB and lease sentences.
   - Add a claim number, service date, lease term, and guest stay so near-miss amounts and dates have gold cases.
   - _Requirements: 3.1, 3.2, 3.3_
+
+- [x] 5. Add the haunted demo on the same library
+  - `demos/haunted/` is static HTML, CSS, and JS plus a stdlib server.
+  - The server calls `DocumentAgent`. Uncited claims are ghosts. Cited answers return span offsets for the highlight.
+  - _Requirements: 1.2, 2.6, 4.1, 4.2_
+
+- [x] 6. Add a judge walkthrough
+  - `scripts/demo_walkthrough.py` prints question, answer, quote span, and pass/fail for both apps.
+  - It exits 0 only when every gold case passes.
+  - Run it before claiming the demo works.
+  - _Requirements: 2.1, 2.2_

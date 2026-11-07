@@ -1,6 +1,6 @@
 [project]
 name = "grave-truth"
-version = "0.2.0"
+version = "0.3.0"
 description = "Citation-grounded document-agent skeleton (Kiroween 2026 — Grave Truth)"
 readme = "README.md"
 requires-python = ">=3.11"

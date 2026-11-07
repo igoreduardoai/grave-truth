@@ -11,6 +11,7 @@ The feature specs that drive the implementation are:
 
 - `.kiro/specs/citation-grounding/` — spans, abstention, and rejection of swapped numbers.
 - `.kiro/specs/demo-apps/` — the two application folders and the offline CLI.
+- `.kiro/specs/haunted-demo/` — the local haunted page and the judge walkthrough.
 
 ## Requirements
 

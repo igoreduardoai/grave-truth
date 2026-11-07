@@ -26,3 +26,11 @@
   - Map a few question words onto words that already occur in the fixtures.
   - Quote the fixture sentence unchanged.
   - _Requirements: 3.3_
+
+- [x] 6. Add gold cases for the next failure modes
+  - Pharmacy charge versus patient responsibility.
+  - Late fee versus rent, including a clause that says the late fee is not monthly rent.
+  - Currency formatting variants that are the same value, and swaps that stay rejected.
+  - Multi-clause questions that must cite two spans, or one sentence that holds both clauses.
+  - A Portuguese question against the English-only lease abstains.
+  - _Requirements: 3.1, 4.1, 4.3, 5.1_
