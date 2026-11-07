@@ -16,4 +16,12 @@ python3 lease-checker/main.py "How many days written notice are required to term
 
 Read the `Citations:` lines. The span is the answer. `Found: no` means the fixture does not say. `Rejected: yes` means the claim's number is not in the matching clause.
 
+Before claiming a demo works, run the judge transcript and require exit 0:
+
+```bash
+python3 scripts/demo_walkthrough.py
+```
+
+That script prints question, answer, quote span, and pass/fail for `eob-explainer` and `lease-checker`. The haunted page is `python3 demos/haunted/server.py` (localhost only). It calls the same library. Do not describe the page as working from a screenshot alone.
+
 Invoke this note with `#demo-walkthrough` when you want the judge path and not the ranker internals.

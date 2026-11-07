@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "walkthrough-before-demo-claim",
+      "description": "After the haunted demo or the walkthrough script changes, remind the agent to run the transcript before claiming the demo works.",
+      "trigger": "PostFileSave",
+      "matcher": "(demos/haunted/.*|scripts/demo_walkthrough\\.py)$",
+      "action": {
+        "type": "agent",
+        "prompt": "Do not claim the haunted demo works until python3 scripts/demo_walkthrough.py exits 0. The transcript must show question, answer, quote span, and pass/fail for both eob-explainer and lease-checker. Also run python3 evals/run_evals.py and python3 -m pytest. Follow .kiro/steering/haunted-demo.md. The demo is synthetic, not a medical device, and not legal advice."
+      }
+    }
+  ]
+}

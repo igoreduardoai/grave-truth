@@ -9,4 +9,4 @@ python3 lease-checker/main.py
 python3 lease-checker/main.py "What is the security deposit?"
 ```
 
-Run these from the repository root. The script uses the shared skeleton in `src/grave_truth`.
+Run these from the repository root. The script uses the shared skeleton in `src/grave_truth`. The haunted demo in `demos/haunted/` uses this same loader. A Portuguese question does not match these English clauses.

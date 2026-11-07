@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grave Truth — haunted clauses</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <p class="eyebrow">Kiroween 2026 · Skeleton Crew · local only</p>
+    <h1>Grave Truth</h1>
+    <p class="lede">Uncited claims fade. A cited answer leaves the source clause lit.</p>
+    <p class="disclaimer">Research demo on synthetic fixtures. Not a medical device and not legal advice. Nothing is sent off this machine.</p>
+  </header>
+
+  <main>
+    <section class="controls" aria-label="Ask the fixtures">
+      <div class="apps" role="tablist" aria-label="Application">
+        <button type="button" class="app-tab is-on" data-app="eob" role="tab" aria-selected="true">EOB explainer</button>
+        <button type="button" class="app-tab" data-app="lease" role="tab" aria-selected="false">Lease checker</button>
+      </div>
+
+      <form id="ask-form">
+        <label for="question">Question or claim</label>
+        <textarea id="question" name="question" rows="3" required>What is the patient responsibility?</textarea>
+        <div class="modes">
+          <label><input type="radio" name="mode" value="answer" checked> Ask the fixture</label>
+          <label><input type="radio" name="mode" value="reject"> Challenge a claim</label>
+        </div>
+        <button type="submit" class="ask">Show the clause</button>
+      </form>
+
+      <div class="presets" id="presets" aria-label="Sample questions"></div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="stage" aria-live="polite">
+      <h2>Result</h2>
+      <div id="verdict" class="verdict">Ask a question. The page calls the local Python library.</div>
+      <div id="ghost-host"></div>
+      <blockquote id="quote" hidden></blockquote>
+
+      <h2>Source <span id="doc-id" class="doc-id"></span></h2>
+      <article id="source" class="source">Loading the synthetic fixture…</article>
+    </section>
+  </main>
+
+  <footer>
+    <p>Run <code>python3 demos/haunted/server.py</code> from the repo root, then open the printed localhost URL. <code>python3 -m http.server</code> only serves these files; the answers come from this script so the page uses the same ranker as the evals.</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
