@@ -18,17 +18,21 @@ GhostUser was the other candidate. It was not adapted because a run requires an 
 
 ## Report
 
-`validation/report.py` writes `validation/reports/observed.json` and `OBSERVED.md`. Counts are numerators over denominators. Confirmed defects are failed scripted profiles only. axe incomplete results and the lexical-overlap note on the adversarial paste stay out of that list. UX hypotheses stay empty when the model layer did not run.
+`validation/report.py` writes `validation/reports/observed.json` and `OBSERVED.md`. Counts are numerators over denominators. Confirmed defects are failed scripted profiles only. The decision is separate from those counts. UX hypotheses stay empty when the model layer did not run.
 
-The adversarial paste is a limit of lexical retrieval: the sentence that says the billed amount is `$999.00` is text in the file, and the demo quotes a span from the file. The harness records which span won. It does not treat that sentence as an instruction to itself.
+A pasted document that states two billed amounts is a conflict. The page shows both original spans and does not select one. The harness expects that conflict verdict. Instructions in the file do not suppress the citation.
 
 ## Negative controls
 
-`validation/fixtures/negative_wrong_citation.html` is a separate local page. It always marks `$999.00` and offers a link to `https://example.com/out`. The citation expectation for `$240.00` fails, which is the catch. The safety probe's click on "Leave" is refused before navigation.
+`validation/fixtures/negative_wrong_citation.html` always marks `$999.00` and links to `https://example.com/out`, with a form that posts to `https://example.com/submit`. The citation check fails, and both the link and the submit button are refused. `negative_keyboard.html` has a skip link whose target cannot take focus, so the focus check fails. `negative_recovery.html` shows the empty-input error and never produces a citation. Each of those failures is the catch.
+
+## Decision
+
+The app config names mandatory, diagnostic, optional, and manual checks. Skipped or failed mandatory checks are `not-ready`. Open manual checks, holdout misses, and axe incomplete results are `insufficient-evidence`. `ready` is not issued while those remain. Sponsor rules are manual. There is no score and no prize claim.
 
 ## Demo fixes found by the keyboard and axe passes
 
-The skip link pointed at `#result`, and that section could not take focus, so Enter changed the hash and left focus on `body`. The section now has `tabindex="-1"` and a visible focus outline. The examples container had `aria-label` on a generic `div`. It is now `role="group"`. axe-core's contrast check stays incomplete on the gradient background; that is recorded, not converted into a palette change or a pass.
+The skip link pointed at `#result`, and that section could not take focus, so Enter changed the hash and left focus on `body`. The section now has `tabindex="-1"` and a visible focus outline. The examples container had `aria-label` on a generic `div`. It is now `role="group"`. axe-core's contrast check stays incomplete because the body background is a gradient. The eyebrow color `#f0d48a` on the declared background `#120e16` measures 13.17:1, above the 4.5:1 AA threshold for normal text. The rule is still enabled. The incomplete result stays in the report.
 
 ## What this design does not do
 

@@ -141,17 +141,20 @@ Gold cases live in `evals/gold_cases.json`.
 
 Last local run (2026-11-08), on this working tree:
 
-- `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22)
-- `python3 -m pytest` → **53 passed** (39 on the judge-demo branch before the validation unit tests, plus 14 tests for the harness)
-- `python3 scripts/demo_walkthrough.py` → exit 0, `passed 90/90` (accept_grounded 22, cited 33, not_found 17, reject_ungrounded 18)
-- `sh validation/run.sh` → scripted browser tasks 10/10, citation 7/7, refusal 3/3, planted failure caught, LLM persona skipped, observed cost $0. See `validation/reports/OBSERVED.md`.
+- `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22). The cited and not-found answer texts were unchanged from the pre-fix snapshot: **0 / 50** of those cases changed span or text.
+- `python3 -m pytest -q` → **60 passed**
+- `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes
+- Held-out file `evals/holdout_cases.json`, first measurement, not used to edit the ranker: **5 / 7** intended checks met. Misses: negation-only still quotes the negated sentence; `USD 240` is quoted because `240` is a number.
+- `python3 -m validation run` → scripted tasks **10/10**, citation **7/7**, refusal **3/3**, negative controls **3/3**, browser-guard probe caught, stability **2/2** identical marks on `eob-billed`, LLM persona skipped, observed cost $0. Decision: **insufficient-evidence**. See `validation/reports/OBSERVED.md`.
 
-The gold-case table matches `evals/gold_cases.json`. The 90/90 and 39 pytest figures were re-run on commit `dca54ec` before the harness tests were added. The 53 count is the later pytest run.
+Before the contradiction change, the pasted document that says the billed amount is both `$999.00` and `$240.00` returned only the `$999.00` sentence. After it, `conflict` is true and both original spans are cited. The original 90 gold cases still pass.
 
 ## Limits
 
 - Research demo. Not a medical device. Not legal advice. Not a coverage decision and not a contract review.
 - Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches.
+- Two different figures for the same subject are a conflict. The answer cites both original spans and does not pick one. `$240` and `$240.00` are the same figure. A claim that names only one side of a conflict is rejected.
+- A negated figure (`not`, `never`, `no`, `without` in front of the number) is ignored when another span states a positive figure for that subject. A file that only says the billed amount is not `$240.00` can still be quoted. `USD 240` is not a separate currency parser; the sentence can be quoted because `240` is a number. Those two gaps are in the holdout, 2 of 7 intended checks missed on the first measurement.
 - The pharmacy charge (`$18.40`) and the patient responsibility (`$42.15`) are different clauses. The late fee (`$75.00`) is not monthly rent (`$1,850.00`). Same value with a different `$` or comma form still counts as that value.
 - Citations are sentences. A sentence that contains two dates is quoted whole.
 - The agent quotes the file. It does not know whether the file is true outside that file.

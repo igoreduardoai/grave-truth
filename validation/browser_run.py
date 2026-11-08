@@ -15,7 +15,7 @@ AXE_RUN = """() => axe.run({
 })"""
 
 
-def run_browser_layers(root: Path, config: dict, base_url: str, fixture_html: bytes, run_dir: Path) -> dict:
+def run_browser_layers(root: Path, config: dict, base_url: str, run_dir: Path) -> dict:
     from playwright.sync_api import sync_playwright
 
     evidence = root / "validation" / "reports" / "evidence"
@@ -34,9 +34,10 @@ def run_browser_layers(root: Path, config: dict, base_url: str, fixture_html: by
             for profile in config["scripted_profiles"]
         ]
         limitations = [item for profile in profiles for item in profile.pop("limitations", [])]
+        stability = _stability(browser, base_url, config, profiles, evidence, traces)
         axe = _axe(browser, base_url, axe_path, evidence, traces)
         double = _double(browser, base_url, config["persona_double"], evidence / "adapter-test-double", traces)
-        probe, negative = _fixture_layers(browser, config, fixture_html, evidence, traces)
+        probe, negative = _fixture_layers(browser, config, evidence, traces)
         browser.close()
 
     return {
@@ -47,6 +48,7 @@ def run_browser_layers(root: Path, config: dict, base_url: str, fixture_html: by
         "probe": probe,
         "negative": negative,
         "chrome": chrome,
+        "stability": stability,
     }
 
 
@@ -149,6 +151,7 @@ def _axe_state(browser, base_url, axe_path: Path, evidence: Path, traces: Path, 
         if prepare:
             prepare(page)
         page.screenshot(path=str(evidence / f"axe-{name}.png"))
+        contrast = _eyebrow_contrast(page) if name == "initial" else None
         page.add_script_tag(path=str(axe_path))
         raw = page.evaluate(AXE_RUN)
     finally:
@@ -162,6 +165,43 @@ def _axe_state(browser, base_url, axe_path: Path, evidence: Path, traces: Path, 
         "incomplete_count": len(incomplete),
         "violations": violations,
         "incomplete": incomplete,
+        "contrast": contrast,
+    }
+
+
+def _eyebrow_contrast(page) -> dict:
+    from validation.contrast import contrast_ratio, parse_rgb
+
+    style = page.evaluate(
+        """() => {
+          const el = document.querySelector('.eyebrow');
+          if (!el) return null;
+          const text = getComputedStyle(el);
+          const body = getComputedStyle(document.body);
+          return {
+            color: text.color,
+            fontSize: text.fontSize,
+            backgroundColor: text.backgroundColor,
+            bodyBackgroundColor: body.backgroundColor,
+            bodyBackgroundImage: body.backgroundImage.slice(0, 220),
+          };
+        }"""
+    )
+    if not style:
+        return {"status": "missing eyebrow"}
+    foreground = parse_rgb(style["color"])
+    ratio = round(contrast_ratio(foreground, (0x12, 0x0E, 0x16)), 2) if foreground else None
+    return {
+        **style,
+        "declared_background": "#120e16",
+        "ratio_versus_declared_background": ratio,
+        "meets_wcag_aa_normal_text": bool(ratio is not None and ratio >= 4.5),
+        "axe_rule_disabled": False,
+        "note": (
+            "Measured text color against the declared #120e16 background. "
+            "axe-core color-contrast stays enabled. Incomplete means axe could not "
+            "resolve the gradient background, which is not a waiver."
+        ),
     }
 
 
@@ -198,18 +238,48 @@ def _double(browser, base_url: str, spec: dict, evidence: Path, traces: Path) ->
     return result
 
 
-def _fixture_layers(browser, config: dict, html: bytes, evidence: Path, traces: Path) -> tuple[dict, list[dict]]:
+def _stability(browser, base_url: str, config: dict, profiles: list[dict], evidence: Path, traces: Path) -> dict:
+    spec = config.get("stability") or {}
+    profile_id = spec.get("profile_id")
+    repeats = int(spec.get("repeats") or 0)
+    if not profile_id or repeats < 2:
+        return {"status": "skipped", "reason": "no stability profile configured"}
+    original = next(item for item in profiles if item["id"] == profile_id)
+    source = next(item for item in config["scripted_profiles"] if item["id"] == profile_id)
+    marks = [original.get("observed_marks")]
+    for _ in range(repeats - 1):
+        extra = _profile(browser, base_url, source, evidence, traces)
+        marks.append(extra.get("observed_marks"))
+    stable = all(item == marks[0] for item in marks)
+    return {
+        "status": "exercised",
+        "profile_id": profile_id,
+        "repeats": repeats,
+        "stable": stable,
+        "marks": marks,
+    }
+
+
+def _fixture_layers(browser, config: dict, evidence: Path, traces: Path) -> tuple[dict, list[dict]]:
+    from validation.config import PACKAGE
     from validation.servers import FixtureServer
 
-    server = FixtureServer(html)
-    url = server.start()
+    def serve(relative: str):
+        server = FixtureServer((PACKAGE / relative).read_bytes())
+        return server, server.start()
+
+    server, url = serve(config["safety_probe"]["fixture"])
     try:
         probe = _probe(browser, url, config["safety_probe"], evidence / "safety-probe", traces)
-        negative = []
-        for control in config["negative_controls"]:
-            negative.append(_negative(browser, url, control, evidence, traces))
     finally:
         server.stop()
+    negative = []
+    for control in config["negative_controls"]:
+        server, url = serve(control["fixture"])
+        try:
+            negative.append(_negative(browser, url, control, evidence, traces))
+        finally:
+            server.stop()
     return probe, negative
 
 
@@ -226,7 +296,8 @@ def _probe(browser, url: str, spec: dict, evidence: Path, traces: Path) -> dict:
     )
     context.tracing.stop(path=str(traces / "safety-probe.zip"))
     context.close()
-    blocked = any(item["category"] == "off_allowlist" for item in result["blockers"])
+    off = [item for item in result["blockers"] if item["category"] == "off_allowlist"]
+    blocked = len(off) >= 2
     local = result["final_host"] in {"127.0.0.1", "localhost"}
     leaked = any(host == "example.com" for host in result["response_hosts"])
     result["caught"] = blocked and local and not leaked

@@ -47,4 +47,6 @@ axe-core's MPL-2.0 copyleft applies to axe-core's own files. Those files are not
 
 ## Product boundary
 
-`validation/` is pre-submission test tooling. It is not one of the two Skeleton Crew applications (`eob-explainer/` and `lease-checker/`). Kiroween's published rules allow libraries and require disclosure of other pre-existing code (https://kiroween.devpost.com/rules, "New Projects Only"). The adapted ux-swarm loop is that pre-existing code. This repository has not been submitted, and nothing in this file is a statement about eligibility, prizes, or demand.
+`validation/` is pre-submission test tooling. It is not one of the two Skeleton Crew applications (`eob-explainer/` and `lease-checker/`). Kiroween's published rules allow libraries and require disclosure of other pre-existing code (https://kiroween.devpost.com/rules, "New Projects Only"). The adapted ux-swarm loop is that pre-existing code. This repository has not been submitted. Eligibility is a manual check. Nothing in this file is a statement about prizes or demand.
+
+The contradiction behavior in `src/grave_truth/skeleton.py` is new project code. It does not copy another repository. No additional third-party package was added for it.

@@ -1,10 +1,20 @@
 # Observed validation run
 
-- Date: 2026-11-08T17:43:18+00:00
-- Commit: `d18640a339e01c2f435380c8fca24e02bdd51b8b`
+- Date: 2026-11-08T18:21:07+00:00
+- Commit: `c036b77eb74e7f15e97e490a0e3fa44617fdee11`
 - Mode: local
 - Observed cost: $0.0 (model API calls: 0)
 - App config: `grave-truth`
+- Repo: https://github.com/igoreduardoai/grave-truth
+
+## Decision
+
+- **insufficient-evidence**
+- held-out intended behavior was not met on every case
+- manual checks are not approved: sponsor_new_work, eligibility, human_review
+- unresolved evidence: holdout intended 5/7: holdout-negation-only, holdout-usd-prefix; axe color-contrast incomplete remains; eyebrow versus #120e16 measured 13.17:1; the rule was not disabled; sponsor and new-work rules were not automatically verified
+- Manual items are not treated as passed.
+- This is not a prize estimate and not a quality score.
 
 ## Denominators
 
@@ -16,15 +26,19 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 
 ## Pytest and gold
 
-- pytest exit 0: passed 53, failed 0
+- pytest exit 0: passed 60, failed 0
 - gold exit 0: 90/90
 
 ## Layers
 
 - pytest_and_gold: exercised
 - scripted_browser: exercised
+- negative_controls: exercised
+- browser_guards: exercised
 - axe_core: exercised
 - lighthouse: diagnostic
+- holdout: exercised
+- stability: exercised
 - persona_llm: skipped
 
 ## axe-core
@@ -38,19 +52,25 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 ## Lighthouse laboratory diagnostic
 
 - Lighthouse 13.6.0, form factor mobile, throttling simulate, mobile emulation True
-- first-contentful-paint: 901.8348000000001
-- largest-contentful-paint: 901.8348000000001
+- first-contentful-paint: 901.1523
+- largest-contentful-paint: 901.1523
 - total-blocking-time: 0
 - cumulative-layout-shift: 0
-- speed-index: 901.8348000000001
+- speed-index: 901.1523
 - lab category performance: 1
 - lab category best-practices: 0.96
 - Laboratory figures from this machine. Not a field measurement, not a harness pass/fail gate, and not a quality score for the product.
 
 ## Negative controls
 
-- Planted citation failures caught: 1 / 1
+- Planted citation failures caught: 3 / 3
 - Off-allowlist click probe: caught
+
+## Holdout
+
+- Intended behavior met: 5 / 7
+- Miss holdout-negation-only: intended not_found; observed The billed amount is not $240.00.
+- Miss holdout-usd-prefix: intended not_found; observed The billed amount is USD 240.
 
 ## Confirmed defects
 
@@ -58,7 +78,7 @@ No scripted profile failed in this run.
 
 ## Limitations and hypotheses
 
-- Limitation: The cited span included the pasted sentence that says the billed amount is $999.00. That sentence is in the document, so the quote is still a slice of the file, and the page did not drop the citation when the sentence said not to cite. Lexical overlap preferred that sentence over 'The billed amount is $240.00.' This is a retrieval limit, not an instruction the harness followed.
+- No extra limitations were recorded by the profiles.
 - No UX hypotheses. The LLM persona runner was not exercised, so none were invented.
 
 ## Persona
@@ -76,4 +96,4 @@ No scripted profile failed in this run.
 - ux_swarm_adapted_from: 71197bc9d4800a9ecac863e7b5eee1f121e287a5
 - ghostuser_evaluated_not_used: 17eaef154011ef93351a127da31cd7216bdd8c8c
 
-This report has no aggregate quality score.
+This report has no aggregate quality score and does not claim a prize.

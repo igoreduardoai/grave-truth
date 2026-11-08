@@ -56,4 +56,9 @@ The subject window is the 60 characters before the number. Support requires over
 - `tests/test_skeleton.py` keeps the original behavior checks.
 - `tests/test_grounding.py` checks slice equality, swapped figures, and re-ingest.
 - `tests/test_properties.py` builds small synthetic documents and checks that answer numbers stay inside citations and that invented amounts are rejected.
+- `evals/adversarial_cases.json` locks the contradiction rule used during the change. `evals/holdout_cases.json` was measured once afterward and was not used to edit the ranker.
 - The Kiro hook `.kiro/hooks/evals-on-save.json` runs `python3 evals/run_evals.py` after relevant saves. `.kiro/hooks/run-evals.json` remains the original on-save hook.
+
+## Contradiction
+
+The rarest subject word in the question is the focus. A figure counts toward that focus only when the focus word is in the text between the previous number and this number, and that prefix does not contain `not`, `never`, `no`, or `without`. Two different normalized figures for that focus set `conflict` and both original spans are returned. `$240` and `$240.00` are one figure. A second subject in the same question is not a conflict. A negated figure is dropped when a positive figure for the same focus exists. A document that only negates a figure, and the form `USD 240`, are known gaps recorded by the holdout.

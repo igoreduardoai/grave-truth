@@ -54,6 +54,7 @@ const VERDICT_TEXT = {
   not_found: "Ghost. No clause in this document matches the question.",
   rejected: "Ghost. That claim is not grounded in the clause that names the subject.",
   mixed: "Mixed. Cited claims stay lit. Ghost claims have no supporting clause.",
+  conflict: "Conflict. These clauses name different figures for the same subject. Neither figure is selected.",
 };
 
 const form = document.querySelector("#ask-form");

@@ -48,13 +48,16 @@ def build_report(parts: dict) -> dict:
     report = {
         "stack": "grave-truth-pre-submission-validation",
         "app": parts["app_id"],
+        "repo": parts.get("repo"),
         "mode": "local",
         "commit": parts["commit"],
         "date": parts["date"],
         "cost_usd_observed": 0,
         "model_api_calls": parts.get("model_api_calls", 0),
+        "decision": parts.get("decision"),
         "versions": parts["versions"],
         "layers": parts["layers"],
+        "holdout": parts.get("holdout"),
         "scripted_profiles": {
             **summary,
             "note": "Scripted Playwright profiles. Not LLM synthetic users.",
@@ -66,7 +69,7 @@ def build_report(parts: dict) -> dict:
         "limitations": parts.get("limitations") or [],
         "ux_hypotheses": parts.get("ux_hypotheses") or [],
         "persona": parts["persona"],
-        "note": "This report has no aggregate quality score.",
+        "note": "This report has no aggregate quality score and does not claim a prize.",
     }
     if "quality_score" in report:
         raise RuntimeError("quality_score must not be emitted")
@@ -93,6 +96,18 @@ def render_markdown(report: dict) -> str:
         f"- Mode: {report['mode']}",
         f"- Observed cost: ${report['cost_usd_observed']} (model API calls: {report['model_api_calls']})",
         f"- App config: `{report['app']}`",
+        f"- Repo: {report.get('repo')}",
+        "",
+        "## Decision",
+        "",
+    ]
+    decision = report.get("decision") or {}
+    lines.append(f"- **{decision.get('decision', 'missing')}**")
+    for reason in decision.get("reasons") or []:
+        lines.append(f"- {reason}")
+    lines.append("- Manual items are not treated as passed.")
+    lines.append("- This is not a prize estimate and not a quality score.")
+    lines.extend([
         "",
         "## Denominators",
         "",
@@ -109,7 +124,7 @@ def render_markdown(report: dict) -> str:
         "",
         "## Layers",
         "",
-    ]
+    ])
     for name, layer in report["layers"].items():
         status = layer.get("status") or ("ok" if layer.get("ok") else "not ok")
         lines.append(f"- {name}: {status}")
@@ -152,6 +167,14 @@ def render_markdown(report: dict) -> str:
     lines.append(f"- Planted citation failures caught: {caught} / {len(controls)}")
     probe = (report.get("persona") or {}).get("safety_probe") or {}
     lines.append(f"- Off-allowlist click probe: {probe.get('status', 'not run')}")
+    lines.extend(["", "## Holdout", ""])
+    holdout = report.get("holdout") or {}
+    lines.append(
+        f"- Intended behavior met: {holdout.get('intended_met')} / {holdout.get('attempted')}"
+    )
+    for row in holdout.get("cases") or []:
+        if not row.get("intended_met"):
+            lines.append(f"- Miss {row.get('id')}: intended {row.get('intended')}; observed {row.get('text')}")
     lines.extend(["", "## Confirmed defects", ""])
     defects = report["confirmed_defects"]
     if not defects:

@@ -127,11 +127,20 @@ def _judge_claim(agent: DocumentAgent, sentence: str) -> dict:
     return {"text": sentence, "ghost": True, "verdict": "rejected", "citations": []}
 
 
+def _answer_verdict(result) -> str:
+    if result.conflict:
+        return "conflict"
+    if result.found:
+        return "cited"
+    return "not_found"
+
+
 def _question_result(agent: DocumentAgent, question: str) -> dict:
     result = agent.answer(question)
     return {
         "question": question,
-        "verdict": "cited" if result.found else "not_found",
+        "verdict": _answer_verdict(result),
+        "conflict": result.conflict,
         "ghost": result.ghost,
         "answer": result.text,
         "citations": _citations(result),
@@ -206,10 +215,12 @@ def ask_payload(payload: dict) -> dict:
         }
 
     result = agent.answer(question)
+    verdict = _answer_verdict(result)
     return {
         **base,
         "mode": mode,
-        "verdict": "cited" if result.found else "not_found",
+        "verdict": verdict,
+        "conflict": result.conflict,
         "ghost": result.ghost,
         "answer": result.text,
         "citations": _citations(result),

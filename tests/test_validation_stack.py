@@ -193,6 +193,44 @@ def test_gold_parsers_read_the_tools_own_lines():
     assert parse_eval_summary("no summary")["ok"] is False
 
 
+def test_contrast_ratio_for_the_declared_gold_on_background():
+    from validation.contrast import contrast_ratio
+
+    ratio = contrast_ratio((0xF0, 0xD4, 0x8A), (0x12, 0x0E, 0x16))
+    assert ratio > 4.5
+    assert round(ratio, 2) == 13.17
+
+
+def test_readiness_is_not_ready_when_a_mandatory_check_is_skipped():
+    from validation.readiness import decide
+
+    decision = decide(
+        {"readiness": {"mandatory": ["pytest_and_gold"], "manual": []}, "manual_approvals": {}},
+        {"layers": {"pytest_and_gold": {"status": "skipped", "exercised": False}}, "holdout": {}, "unresolved": []},
+    )
+    assert decision["decision"] == "not-ready"
+    assert decision["not_a_prize_claim"] is True
+
+
+def test_readiness_stays_insufficient_while_manual_approval_is_open():
+    from validation.readiness import decide
+
+    decision = decide(
+        {
+            "readiness": {"mandatory": ["pytest_and_gold"], "manual": ["eligibility"]},
+            "manual_approvals": {},
+        },
+        {
+            "layers": {"pytest_and_gold": {"status": "exercised", "ok": True, "exercised": True}},
+            "holdout": {"intended_met": 5, "attempted": 7},
+            "unresolved": ["holdout intended 5/7"],
+        },
+    )
+    assert decision["decision"] == "insufficient-evidence"
+    assert "eligibility" in decision["manual_open"]
+    assert decision["decision"] != "ready"
+
+
 def test_opt_in_without_litellm_stays_skipped(monkeypatch):
     import builtins
 

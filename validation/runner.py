@@ -13,6 +13,8 @@ from validation.browser_run import run_browser_layers
 from validation.config import PACKAGE, load_app
 from validation.gold import run_gold
 from validation.persona import llm_persona_status
+from validation.holdout_eval import measure as measure_holdout
+from validation.readiness import decide
 from validation.report import build_report, summarize_profiles, write_report
 from validation.servers import start_product_server, stop_process
 
@@ -61,8 +63,7 @@ def execute(config: dict) -> tuple[dict, bool]:
     browser = None
     try:
         proc, base_url = start_product_server(ROOT, "demos/haunted/server.py")
-        fixture = (PACKAGE / config["negative_controls"][0]["fixture"]).read_bytes()
-        browser = run_browser_layers(ROOT, config, base_url, fixture, run_dir)
+        browser = run_browser_layers(ROOT, config, base_url, run_dir)
         lighthouse = run_lighthouse(base_url, browser["chrome"], run_dir / "lighthouse.json")
     finally:
         stop_process(proc)
@@ -72,25 +73,71 @@ def execute(config: dict) -> tuple[dict, bool]:
     probe = browser["probe"]
     negative = browser["negative"]
     profiles = _relativize(browser["profiles"], ROOT)
+    holdout = measure_holdout(ROOT)
+    journeys_ok = all(item["completed"] for item in profiles)
+    stability = browser.get("stability") or {}
+    if stability.get("status") == "exercised" and not stability.get("stable"):
+        journeys_ok = False
+    negatives_ok = bool(negative) and all(item["caught"] for item in negative)
+    guards_ok = bool(probe.get("caught"))
     layers = {
-        "pytest_and_gold": {**gold, "status": "exercised" if gold["ok"] else "failed"},
+        "pytest_and_gold": {**gold, "status": "exercised" if gold["ok"] else "failed", "ok": gold["ok"]},
         "scripted_browser": {
-            "status": "exercised",
+            "status": "exercised" if journeys_ok else "failed",
             "tool": "playwright",
-            "ok": all(item["completed"] for item in profiles),
+            "ok": journeys_ok,
             "note": "Deterministic scripted profiles. Not LLM synthetic users.",
+        },
+        "negative_controls": {
+            "status": "exercised" if negatives_ok else "failed",
+            "ok": negatives_ok,
+            "exercised": True,
+        },
+        "browser_guards": {
+            "status": "exercised" if guards_ok else "failed",
+            "ok": guards_ok,
+            "exercised": True,
         },
         "axe_core": {
             "status": axe["status"],
             "exercised": axe.get("exercised", False),
+            "ok": bool(axe.get("exercised")),
             "violation_count": axe.get("violation_count"),
             "incomplete_count": axe.get("incomplete_count"),
             "states": axe.get("states") or [],
             "note": axe.get("note") or axe.get("reason"),
         },
         "lighthouse": lighthouse,
+        "holdout": {
+            "status": "exercised",
+            "exercised": True,
+            "ok": True,
+            "intended_met": holdout["intended_met"],
+            "attempted": holdout["attempted"],
+            "note": "Measurement of held-out cases. A miss is disclosed, not tuned away in this run.",
+        },
+        "stability": stability,
         "persona_llm": llm,
     }
+    contrast = None
+    for state in axe.get("states") or []:
+        if state.get("contrast"):
+            contrast = state["contrast"]
+    unresolved = []
+    if holdout["intended_met"] != holdout["attempted"]:
+        misses = [row["id"] for row in holdout["cases"] if not row["intended_met"]]
+        unresolved.append(
+            f"holdout intended {holdout['intended_met']}/{holdout['attempted']}: {', '.join(misses)}"
+        )
+    if axe.get("incomplete_count"):
+        ratio = (contrast or {}).get("ratio_versus_declared_background")
+        unresolved.append(
+            "axe color-contrast incomplete remains"
+            + (f"; eyebrow versus #120e16 measured {ratio}:1" if ratio is not None else "")
+            + "; the rule was not disabled"
+        )
+    if config.get("submission", {}).get("rules_check") != "automatically_verified":
+        unresolved.append("sponsor and new-work rules were not automatically verified")
     persona = {
         "runner": "ux-swarm-adapted",
         "upstream": "https://github.com/masonomara/ux-swarm/commit/71197bc9d4800a9ecac863e7b5eee1f121e287a5",
@@ -102,13 +149,17 @@ def execute(config: dict) -> tuple[dict, bool]:
     for state in axe.get("states") or []:
         for item in state.get("violations") or []:
             findings.append({"state": state["state"], "tool": "axe-core", **item})
+    decision = decide(config, {"layers": layers, "holdout": holdout, "unresolved": unresolved})
     report = build_report({
         "app_id": config["id"],
+        "repo": _repo(),
         "commit": commit,
         "date": date,
         "model_api_calls": llm.get("calls", 0),
         "versions": versions,
         "layers": layers,
+        "holdout": holdout,
+        "decision": decision,
         "scripted_profiles": profiles,
         "negative_controls": negative,
         "axe_findings": findings,
@@ -117,12 +168,14 @@ def execute(config: dict) -> tuple[dict, bool]:
         "persona": persona,
     })
     report["cost_usd_observed"] = float(llm.get("cost_usd_observed") or 0) + float(double.get("cost_usd_observed") or 0)
-    ok = _ok(gold, profiles, negative, double, probe, axe, lighthouse)
-    report["harness_ok"] = ok
+    report["contrast"] = contrast
+    ok = _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability)
+    report["automated_commands_ok"] = ok
     return report, ok
 
 
-def _ok(gold, profiles, negative, double, probe, axe, lighthouse) -> bool:
+def _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability) -> bool:
+    stable = stability.get("status") != "exercised" or stability.get("stable") is True
     return bool(
         gold["ok"]
         and profiles
@@ -133,7 +186,22 @@ def _ok(gold, profiles, negative, double, probe, axe, lighthouse) -> bool:
         and probe.get("caught")
         and axe.get("exercised")
         and lighthouse.get("status") == "diagnostic"
+        and stable
     )
+
+
+def _repo() -> str:
+    completed = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    url = completed.stdout.strip()
+    if "@" in url:
+        url = "https://" + url.split("@", 1)[1]
+    return url.removesuffix(".git")
 
 
 def run_lighthouse(url: str, chrome: str | None, out_path: Path) -> dict:

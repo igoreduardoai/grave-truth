@@ -30,7 +30,9 @@ Synthetic EOB and lease text only. The profiles load or select a fixture, paste 
 
 A planted page that highlights `$999.00` must fail the citation check. A link to `https://example.com/out` must not be followed. Page text is data. The replay decider ignores instructions in the page.
 
-The checked-in result is `validation/reports/OBSERVED.md`. Traces from the latest run stay under `validation/reports/runs/`, which is gitignored. Screenshots of the synthetic pages are in `validation/reports/evidence/`.
+The checked-in result is `validation/reports/OBSERVED.md`. The decision is `ready`, `not-ready`, or `insufficient-evidence` from the app config. Grave Truth stays `insufficient-evidence` while sponsor rules are manual and the holdout has misses. A skipped mandatory check is `not-ready`. There is no quality score.
+
+Traces from the latest run stay under `validation/reports/runs/`, which is gitignored. Screenshots of the synthetic pages are in `validation/reports/evidence/`.
 
 ## Opt-in model
 
@@ -42,6 +44,8 @@ Both of these are required, and neither is set in the committed config:
 Ambient `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, and `AZURE_API_KEY` are not read when opt-in is off. If opt-in is on and `litellm` is not installed, the layer is skipped and no other model is called. Installing `litellm` can send page text to the provider named by the model string and can cost money. Do not point it at a real bill, a real lease, or anyone's personal information.
 
 ## Not included
+
+No new third-party package was added for the contradiction rule or the readiness report. The pins above are unchanged.
 
 GhostUser was inspected (MIT, commit `17eaef154011ef93351a127da31cd7216bdd8c8c`) and not used. Its browser agent calls Anthropic or OpenAI only, and its built-in personas are demographic sketches. ux-swarm exposes a Python step loop and custom task personas, which matches this repo and the opt-in rule. UXAgent was not copied: GitHub reports no SPDX license and the root has no `LICENSE` file.
 
