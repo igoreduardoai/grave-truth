@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Offline haunted demo. Stdlib HTTP server bound to 127.0.0.1.
 
-Answers come from DocumentAgent and the synthetic fixtures. No model API
-and no outbound requests. Uncited claims are ghosts. Cited answers carry
+Answers come from DocumentAgent. The page can pick a synthetic fixture or
+paste a document, then ask a question or check a proposed answer. No model
+API and no outbound requests. Uncited claims are ghosts. Cited claims carry
 the source span offsets the page highlights.
 
     python3 demos/haunted/server.py
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,11 +22,16 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from grave_truth.apps import eob, lease  # noqa: E402
+from grave_truth.skeleton import DocumentAgent  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-MAX_BODY = 8192
+MAX_BODY = 48000
+MAX_DOCUMENT = 16384
+MAX_QUESTION = 1000
+MAX_ANSWER = 4000
+_CLAIM_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
 STATIC = {
     "/": "index.html",
@@ -37,8 +44,12 @@ CONTENT_TYPES = {
     "app.js": "text/javascript; charset=utf-8",
     "style.css": "text/css; charset=utf-8",
 }
-APP_LABELS = {"eob": "eob-explainer", "lease": "lease-checker"}
-DOC_IDS = {"eob": "sample-eob", "lease": "sample-lease"}
+APP_LABELS = {
+    "eob": "eob-explainer",
+    "lease": "lease-checker",
+    "paste": "pasted document",
+}
+DOC_IDS = {"eob": "sample-eob", "lease": "sample-lease", "paste": "pasted-document"}
 
 
 def _load(app: str):
@@ -50,8 +61,11 @@ def _load(app: str):
 
 
 def _document(app: str) -> str:
-    fixture = eob.FIXTURE if app == "eob" else lease.FIXTURE
-    return fixture.read_text(encoding="utf-8")
+    if app == "eob":
+        return eob.FIXTURE.read_text(encoding="utf-8")
+    if app == "lease":
+        return lease.FIXTURE.read_text(encoding="utf-8")
+    raise ValueError("app must be eob or lease")
 
 
 def _citations(result) -> list[dict]:
@@ -66,71 +80,144 @@ def _citations(result) -> list[dict]:
     ]
 
 
+def _text(value, name: str, limit: int) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be a string")
+    text = value.strip()
+    if len(text) > limit:
+        raise ValueError(f"{name} is too long")
+    return text
+
+
+def _split_claims(answer: str) -> list[str]:
+    parts = [part.strip() for part in _CLAIM_SPLIT.split(answer) if part.strip()]
+    return parts or [answer]
+
+
+def _agent_for(payload: dict, app: str):
+    """Return the shared agent, the exact text it ingested, id, and label."""
+    if app == "paste":
+        document = _text(payload.get("document"), "document", MAX_DOCUMENT)
+        if not document:
+            raise ValueError("document is required")
+        agent = DocumentAgent()
+        agent.ingest(DOC_IDS["paste"], document)
+        return agent, document, DOC_IDS["paste"], APP_LABELS["paste"]
+    if app not in {"eob", "lease"}:
+        raise ValueError("app must be eob, lease, or paste")
+    extra = payload.get("document")
+    if isinstance(extra, str) and extra.strip():
+        raise ValueError("document is only accepted when app is paste")
+    return _load(app), _document(app), DOC_IDS[app], APP_LABELS[app]
+
+
+def _judge_claim(agent: DocumentAgent, sentence: str) -> dict:
+    """Cite a sentence only when DocumentAgent accepts it and can quote a span."""
+    if not agent.reject_ungrounded_claim(sentence):
+        result = agent.answer(sentence)
+        if result.found and result.citations:
+            return {
+                "text": sentence,
+                "ghost": False,
+                "verdict": "cited",
+                "citations": _citations(result),
+            }
+    return {"text": sentence, "ghost": True, "verdict": "rejected", "citations": []}
+
+
+def _question_result(agent: DocumentAgent, question: str) -> dict:
+    result = agent.answer(question)
+    return {
+        "question": question,
+        "verdict": "cited" if result.found else "not_found",
+        "ghost": result.ghost,
+        "answer": result.text,
+        "citations": _citations(result),
+    }
+
+
 def ask_payload(payload: dict) -> dict:
     """Run one local question or claim. Raises ValueError on a bad request."""
     app = payload.get("app")
-    if app not in APP_LABELS:
-        raise ValueError("app must be eob or lease")
-    question = payload.get("question")
-    if not isinstance(question, str):
-        raise ValueError("question must be a string")
-    question = question.strip()
-    if not question:
-        raise ValueError("question is required")
-    if len(question) > 1000:
-        raise ValueError("question is too long")
+    if not isinstance(app, str):
+        raise ValueError("app must be eob, lease, or paste")
+    agent, document, doc_id, label = _agent_for(payload, app)
+    question = _text(payload.get("question"), "question", MAX_QUESTION)
+    answer = _text(payload.get("answer"), "answer", MAX_ANSWER)
+    if not question and not answer:
+        raise ValueError("question or answer is required")
+
+    base = {
+        "app": app,
+        "app_label": label,
+        "question": question,
+        "document_id": doc_id,
+        "document": document,
+    }
+    if answer:
+        mode = payload.get("mode") or "check"
+        if mode not in {"answer", "reject", "check"}:
+            raise ValueError("mode must be answer, reject, or check")
+        claims = [_judge_claim(agent, sentence) for sentence in _split_claims(answer)]
+        ghosts = [claim["ghost"] for claim in claims]
+        if all(ghosts):
+            verdict, ghost = "rejected", True
+        elif any(ghosts):
+            verdict, ghost = "mixed", False
+        else:
+            verdict, ghost = "cited", False
+        body = {
+            **base,
+            "mode": "check",
+            "verdict": verdict,
+            "ghost": ghost,
+            "answer": answer,
+            "citations": [item for claim in claims for item in claim["citations"]],
+            "claims": claims,
+        }
+        if question:
+            body["question_result"] = _question_result(agent, question)
+        return body
+
     mode = payload.get("mode") or "answer"
     if mode not in {"answer", "reject"}:
         raise ValueError("mode must be answer or reject")
-
-    agent = _load(app)
-    document = _document(app)
     if mode == "reject":
         rejected = agent.reject_ungrounded_claim(question)
         if rejected:
             return {
-                "app": app,
-                "app_label": APP_LABELS[app],
+                **base,
                 "mode": mode,
-                "question": question,
                 "verdict": "rejected",
                 "ghost": True,
                 "answer": "rejected",
-                "document_id": DOC_IDS[app],
-                "document": document,
                 "citations": [],
             }
         result = agent.answer(question)
         return {
-            "app": app,
-            "app_label": APP_LABELS[app],
+            **base,
             "mode": mode,
-            "question": question,
             "verdict": "accepted",
             "ghost": False,
             "answer": result.text if result.found else "accepted",
-            "document_id": DOC_IDS[app],
-            "document": document,
             "citations": _citations(result) if result.found else [],
         }
 
     result = agent.answer(question)
     return {
-        "app": app,
-        "app_label": APP_LABELS[app],
+        **base,
         "mode": mode,
-        "question": question,
         "verdict": "cited" if result.found else "not_found",
         "ghost": result.ghost,
         "answer": result.text,
-        "document_id": DOC_IDS[app],
-        "document": document,
         "citations": _citations(result),
     }
 
 
 def document_payload(app: str) -> dict:
-    if app not in APP_LABELS:
+    if app not in {"eob", "lease"}:
         raise ValueError("app must be eob or lease")
     return {
         "app": app,

@@ -18,4 +18,23 @@
 - [x] 4. Remind before a demo claim
   - Steering in `.kiro/steering/haunted-demo.md`.
   - Hook `.kiro/hooks/walkthrough-before-demo.json`.
-  - _Requirements: 2.1_
+  - _Requirements: 3.1_
+
+- [x] 5. Let a judge paste or pick a document
+  - The page offers Sample EOB, Sample lease, and Paste a document.
+  - Paste ingests the posted text with `DocumentAgent` under id `pasted-document`.
+  - _Requirements: 2.2, 2.3, 2.6_
+
+- [x] 6. Show cited claims and ghost claims
+  - A proposed answer is checked sentence by sentence through the shared library.
+  - Mixed answers return both kinds of claim. Ghosts have no citation.
+  - _Requirements: 2.4_
+
+- [x] 7. Reject empty and oversized input
+  - Missing question and answer, a blank pasted document, and over-limit bodies return HTTP 400.
+  - Covered by `tests/test_web_demo.py`.
+  - _Requirements: 2.5_
+
+- [x] 8. Document the one-command judge quickstart
+  - README section `Judge quickstart` names `python3 demos/haunted/server.py`.
+  - _Requirements: 2.1, 2.7_
