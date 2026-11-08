@@ -51,6 +51,14 @@ python3 scripts/demo_walkthrough.py
 python3 demos/haunted/server.py
 ```
 
+Pre-submission check (pytest, gold cases, scripted browser journeys, axe-core, Lighthouse). No model API:
+
+```bash
+sh validation/run.sh
+```
+
+Details, licenses, and the last observed run are in `validation/README.md` and `validation/reports/OBSERVED.md`.
+
 `scripts/demo_walkthrough.py` prints a judge transcript for both apps: question, answer, quote span, and pass/fail. It exits 0 when every gold case passes. Run it before treating the demo as working.
 
 `demos/haunted/server.py` binds to `127.0.0.1` and prints a localhost URL. Open that URL. Uncited claims fade. A cited answer highlights the source clause in the fixture. The page posts to that process, which calls `DocumentAgent`. No paid API. `python3 -m http.server` from `demos/haunted/` only serves the static files; it does not answer questions.
@@ -98,6 +106,7 @@ Specs (requirements, design, tasks):
 - `.kiro/specs/citation-grounding/` — spans, abstention, rejection
 - `.kiro/specs/demo-apps/` — the two app folders and the CLI
 - `.kiro/specs/haunted-demo/` — the local page: paste or pick a document, cited claims and ghosts
+- `.kiro/specs/pre-submission-validation/` — local checks around that page. Not a third application.
 
 Steering in `.kiro/steering/`:
 
@@ -105,6 +114,7 @@ Steering in `.kiro/steering/`:
 - `testing-gold-cases.md` and `fixture-safety.md` load by file match
 - `add-gold-case.md` loads automatically when eval work is in context
 - `demo-walkthrough.md` is manual (`#demo-walkthrough`)
+- `validation-stack.md` loads by file match on `validation/`
 
 Hooks in `.kiro/hooks/`:
 
@@ -129,13 +139,14 @@ Gold cases live in `evals/gold_cases.json`.
 | accept_grounded | 22 |
 | **Total** | **90** |
 
-Last local run (2026-11-08):
+Last local run (2026-11-08), on this working tree:
 
 - `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22)
-- `python3 -m pytest` → **39 passed**
+- `python3 -m pytest` → **53 passed** (39 on the judge-demo branch before the validation unit tests, plus 14 tests for the harness)
 - `python3 scripts/demo_walkthrough.py` → exit 0, `passed 90/90` (accept_grounded 22, cited 33, not_found 17, reject_ungrounded 18)
+- `sh validation/run.sh` → scripted browser tasks 10/10, citation 7/7, refusal 3/3, planted failure caught, LLM persona skipped, observed cost $0. See `validation/reports/OBSERVED.md`.
 
-The gold-case table matches `evals/gold_cases.json`. Counts above are from the local run on 2026-11-07.
+The gold-case table matches `evals/gold_cases.json`. The 90/90 and 39 pytest figures were re-run on commit `dca54ec` before the harness tests were added. The 53 count is the later pytest run.
 
 ## Limits
 
@@ -150,3 +161,5 @@ The gold-case table matches `evals/gold_cases.json`. Counts above are from the l
 ## License
 
 MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler. Cortexa Social Inc.
+
+Upstream licenses for the validation tooling are in `THIRD_PARTY_NOTICES.md`. The validation stack is test tooling, not a third application.

@@ -7,3 +7,5 @@ venv/
 .mypy_cache/
 dist/
 *.egg-info/
+validation/node_modules/
+validation/reports/runs/

@@ -231,9 +231,10 @@ textarea:focus-visible,
 input:focus-visible,
 a:focus-visible,
 .source:focus-visible,
-.verdict:focus-visible {
+.verdict:focus-visible,
+#result:focus {
   outline: 2px solid var(--gold);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 @media (max-width: 800px) {

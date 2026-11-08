@@ -1,0 +1,18 @@
+# Notice
+
+This validation tooling links to, and does not vendor, the following Apache-2.0 packages:
+
+- Playwright, Copyright Microsoft Corporation and Playwright contributors.
+  https://github.com/microsoft/playwright
+  Apache License 2.0. Pin: Python package `playwright==1.64.1`.
+
+- Lighthouse, Copyright Google LLC and Lighthouse contributors.
+  https://github.com/GoogleChrome/lighthouse
+  Apache License 2.0. Pin: npm `lighthouse@13.6.0`.
+
+Those packages are installed from their registries. Their full license text ships inside the installed package and is not copied into this repository.
+
+axe-core is MPL-2.0, not Apache-2.0. See THIRD_PARTY_NOTICES.md. It is installed unmodified as npm `axe-core@4.14.0`.
+
+The adapted browser step loop is MIT, Copyright (c) 2026 Mason O'Mara.
+See validation/third_party/ux-swarm/LICENSE.

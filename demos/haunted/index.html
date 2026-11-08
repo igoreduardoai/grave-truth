@@ -43,11 +43,11 @@
         <button type="submit" class="ask">Check grounding</button>
       </form>
 
-      <div class="presets" id="presets" aria-label="Examples"></div>
+      <div class="presets" id="presets" role="group" aria-label="Examples"></div>
       <p id="status" class="status" role="status"></p>
     </section>
 
-    <section class="stage" id="result">
+    <section class="stage" id="result" tabindex="-1">
       <div aria-live="polite">
       <h2>Result</h2>
       <div id="verdict" class="verdict" tabindex="-1">Ask a question or paste an answer. The page calls the local Python library.</div>
