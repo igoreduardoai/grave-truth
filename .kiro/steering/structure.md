@@ -11,6 +11,7 @@ inclusion: always
 - `evals/` — gold cases and the hook runner.
 - `scripts/demo_walkthrough.py` — judge transcript for both apps. Run it before claiming a demo works.
 - `demos/haunted/` — offline judge page. Pick a fixture or paste synthetic text. Ghosts are uncited claims. A cited claim highlights the source clause.
+- `validation/` — local pre-submission checks for that page. Not a third app. Quickstart: `sh validation/run.sh`.
 - `tests/` — pytest, including generated-document checks.
 - `.kiro/` — specs, steering, and hooks. Never gitignore this directory.
 

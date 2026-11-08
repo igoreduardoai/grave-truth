@@ -1,0 +1,96 @@
+{
+  "intended_met": 5,
+  "attempted": 7,
+  "cases": [
+    {
+      "id": "holdout-two-visits",
+      "group": "scope",
+      "intended": "conflict",
+      "intended_met": true,
+      "detail": "conflict=True text='For the January visit the billed amount is $240.00. For the February visit the billed amount is $999.00.' citations=['For the January visit the billed amount is $240.00.', 'For the February visit the billed amount is $999.00.']",
+      "conflict": true,
+      "found": true,
+      "text": "For the January visit the billed amount is $240.00. For the February visit the billed amount is $999.00.",
+      "spans": [
+        "For the January visit the billed amount is $240.00.",
+        "For the February visit the billed amount is $999.00."
+      ]
+    },
+    {
+      "id": "holdout-sticker-same-sentence",
+      "group": "multi-clause",
+      "intended": "cited",
+      "intended_met": true,
+      "detail": "text='The billed amount is $240.00, and a sticker on the folder says $999.00.' citations=['The billed amount is $240.00, and a sticker on the folder says $999.00.']",
+      "conflict": false,
+      "found": true,
+      "text": "The billed amount is $240.00, and a sticker on the folder says $999.00.",
+      "spans": [
+        "The billed amount is $240.00, and a sticker on the folder says $999.00."
+      ]
+    },
+    {
+      "id": "holdout-paraphrase-invoice",
+      "group": "paraphrase",
+      "intended": "not_found",
+      "intended_met": true,
+      "detail": "found=False text='not found' citations=0",
+      "conflict": false,
+      "found": false,
+      "text": "not found",
+      "spans": []
+    },
+    {
+      "id": "holdout-negation-only",
+      "group": "negation",
+      "intended": "not_found",
+      "intended_met": false,
+      "detail": "found=True text='The billed amount is not $240.00.' citations=1",
+      "conflict": false,
+      "found": true,
+      "text": "The billed amount is not $240.00.",
+      "spans": [
+        "The billed amount is not $240.00."
+      ]
+    },
+    {
+      "id": "holdout-usd-prefix",
+      "group": "number-form",
+      "intended": "not_found",
+      "intended_met": false,
+      "detail": "found=True text='The billed amount is USD 240.' citations=1",
+      "conflict": false,
+      "found": true,
+      "text": "The billed amount is USD 240.",
+      "spans": [
+        "The billed amount is USD 240."
+      ]
+    },
+    {
+      "id": "holdout-phone-distractor",
+      "group": "distractor",
+      "intended": "cited",
+      "intended_met": true,
+      "detail": "text='The billed amount is $240.00.' citations=['The billed amount is $240.00.']",
+      "conflict": false,
+      "found": true,
+      "text": "The billed amount is $240.00.",
+      "spans": [
+        "The billed amount is $240.00."
+      ]
+    },
+    {
+      "id": "holdout-instruction-after-figure",
+      "group": "instruction",
+      "intended": "cited",
+      "intended_met": true,
+      "detail": "text='The billed amount is $240.00.' citations=['The billed amount is $240.00.']",
+      "conflict": false,
+      "found": true,
+      "text": "The billed amount is $240.00.",
+      "spans": [
+        "The billed amount is $240.00."
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@ authors = [{ name = "Igor Eduardo" }]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Browser checks are test tooling, not the product library.
+validation = ["playwright==1.64.1"]
 
 [project.scripts]
 grave-truth = "grave_truth.cli:main"
@@ -22,4 +24,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "evals"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]

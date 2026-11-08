@@ -165,6 +165,7 @@ textarea {
 .verdict.cited, .verdict.accepted, .library.cited { color: var(--ok); }
 .verdict.ghost, .library.ghost { color: var(--ghost); }
 .verdict.rejected { color: var(--danger); }
+.verdict.conflict { color: var(--gold); }
 .verdict.mixed { color: var(--gold); }
 
 .claims { list-style: none; margin: 0; padding: 0; }
@@ -231,9 +232,10 @@ textarea:focus-visible,
 input:focus-visible,
 a:focus-visible,
 .source:focus-visible,
-.verdict:focus-visible {
+.verdict:focus-visible,
+#result:focus {
   outline: 2px solid var(--gold);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 @media (max-width: 800px) {
