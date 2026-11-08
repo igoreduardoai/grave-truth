@@ -3,12 +3,12 @@
   "hooks": [
     {
       "name": "walkthrough-before-demo-claim",
-      "description": "After the haunted demo or the walkthrough script changes, remind the agent to run the transcript before claiming the demo works.",
+      "description": "After the haunted demo or the walkthrough script changes, remind the agent to run the transcript and the web demo checks before claiming the demo works.",
       "trigger": "PostFileSave",
       "matcher": "(demos/haunted/.*|scripts/demo_walkthrough\\.py)$",
       "action": {
         "type": "agent",
-        "prompt": "Do not claim the haunted demo works until python3 scripts/demo_walkthrough.py exits 0. The transcript must show question, answer, quote span, and pass/fail for both eob-explainer and lease-checker. Also run python3 evals/run_evals.py and python3 -m pytest. Follow .kiro/steering/haunted-demo.md. The demo is synthetic, not a medical device, and not legal advice."
+        "prompt": "Do not claim the haunted demo works until python3 scripts/demo_walkthrough.py exits 0 and python3 -m pytest tests/test_web_demo.py passes. The transcript must show question, answer, quote span, and pass/fail for both eob-explainer and lease-checker. The page must pick a fixture or paste a synthetic document, call DocumentAgent, and show cited claims versus ghost claims. Empty and oversized input must return HTTP 400. Also run python3 evals/run_evals.py and python3 -m pytest. Follow .kiro/steering/haunted-demo.md. The demo is synthetic, not a medical device, and not legal advice. Do not add a deployment or credentials."
       }
     }
   ]

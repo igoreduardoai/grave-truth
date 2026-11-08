@@ -15,6 +15,20 @@ The library is `src/grave_truth`. The folders above are the two apps. They do no
 
 This is a research demo. It is not a medical device and not legal advice. Documents in `fixtures/` are synthetic. There is no real PHI and no real lease.
 
+## Judge quickstart
+
+One command, from the repo root. No API key and no network:
+
+```bash
+python3 demos/haunted/server.py
+```
+
+Open the `http://127.0.0.1:8765/` URL the process prints. Pick the sample EOB or the sample lease, or paste a synthetic document. Type a question, a proposed answer, or both, then choose **Check grounding**. Examples under the form fill both and run the check.
+
+Cited claims stay on the page, with a Cited badge, and the source clause is marked in gold. Claims with no supporting clause are ghosts: the sentence fades and a Ghost badge stays. The page posts to that local process, which calls `DocumentAgent` in `src/grave_truth`. It does not reimplement the checker and it does not send the document anywhere.
+
+`python3 -m http.server` only serves the static files. It does not answer questions.
+
 ## How to run
 
 Python 3.11 or newer. From the repo root:
@@ -83,6 +97,7 @@ Specs (requirements, design, tasks):
 - `.kiro/specs/grave-truth.md` — overview
 - `.kiro/specs/citation-grounding/` — spans, abstention, rejection
 - `.kiro/specs/demo-apps/` — the two app folders and the CLI
+- `.kiro/specs/haunted-demo/` — the local page: paste or pick a document, cited claims and ghosts
 
 Steering in `.kiro/steering/`:
 
@@ -98,7 +113,7 @@ Hooks in `.kiro/hooks/`:
 - `pytest-on-save.json` — v1 command hook for pytest
 - `grounding-reminder.json` — v1 agent prompt after `skeleton.py` changes
 - `block-secret-files.json` — v1 `PreToolUse` command that exits 2 for `.env`, key, and `secrets/` paths (`scripts/kiro_guard_no_secrets.py`)
-- `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough before claiming the demo works
+- `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough and the web demo tests before claiming the demo works
 
 Run the hook command locally with `python3 evals/run_evals.py`. The demo check is `python3 scripts/demo_walkthrough.py`.
 
@@ -114,10 +129,10 @@ Gold cases live in `evals/gold_cases.json`.
 | accept_grounded | 22 |
 | **Total** | **90** |
 
-Last local run (2026-11-07):
+Last local run (2026-11-08):
 
 - `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22)
-- `python3 -m pytest` → **31 passed**
+- `python3 -m pytest` → **39 passed**
 - `python3 scripts/demo_walkthrough.py` → exit 0, `passed 90/90` (accept_grounded 22, cited 33, not_found 17, reject_ungrounded 18)
 
 The gold-case table matches `evals/gold_cases.json`. Counts above are from the local run on 2026-11-07.

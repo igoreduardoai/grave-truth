@@ -7,47 +7,64 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a class="skip" href="#result">Skip to result</a>
   <header class="top">
     <p class="eyebrow">Kiroween 2026 · Skeleton Crew · local only</p>
     <h1>Grave Truth</h1>
-    <p class="lede">Uncited claims fade. A cited answer leaves the source clause lit.</p>
-    <p class="disclaimer">Research demo on synthetic fixtures. Not a medical device and not legal advice. Nothing is sent off this machine.</p>
+    <p class="lede">Uncited claims fade. A cited claim leaves the source clause lit.</p>
+    <p class="disclaimer">Research demo on synthetic text. Not a medical device and not legal advice. Nothing is sent off this machine. Do not paste a real bill, a real lease, or anyone's personal information.</p>
   </header>
 
   <main>
-    <section class="controls" aria-label="Ask the fixtures">
-      <div class="apps" role="tablist" aria-label="Application">
-        <button type="button" class="app-tab is-on" data-app="eob" role="tab" aria-selected="true">EOB explainer</button>
-        <button type="button" class="app-tab" data-app="lease" role="tab" aria-selected="false">Lease checker</button>
-      </div>
-
+    <section class="controls">
       <form id="ask-form">
-        <label for="question">Question or claim</label>
-        <textarea id="question" name="question" rows="3" required>What is the patient responsibility?</textarea>
-        <div class="modes">
-          <label><input type="radio" name="mode" value="answer" checked> Ask the fixture</label>
-          <label><input type="radio" name="mode" value="reject"> Challenge a claim</label>
+        <fieldset>
+          <legend>Document</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="app" value="eob" checked> Sample EOB</label>
+            <label class="choice"><input type="radio" name="app" value="lease"> Sample lease</label>
+            <label class="choice"><input type="radio" name="app" value="paste"> Paste a document</label>
+          </div>
+        </fieldset>
+
+        <div id="paste-field" hidden>
+          <label for="document">Pasted document</label>
+          <textarea id="document" name="document" rows="8" spellcheck="false" autocomplete="off" aria-describedby="document-hint"></textarea>
+          <p id="document-hint" class="hint">Synthetic text only. The checker ingests this text with the same library as the evals.</p>
         </div>
-        <button type="submit" class="ask">Show the clause</button>
+
+        <label for="question">Question</label>
+        <textarea id="question" name="question" rows="3" autocomplete="off">What is the patient responsibility?</textarea>
+
+        <label for="answer">Proposed answer</label>
+        <textarea id="answer" name="answer" rows="4" autocomplete="off" aria-describedby="answer-hint"></textarea>
+        <p id="answer-hint" class="hint">Optional. Each sentence is checked. A sentence with no supporting clause is a ghost. Ctrl+Enter checks.</p>
+
+        <button type="submit" class="ask">Check grounding</button>
       </form>
 
-      <div class="presets" id="presets" aria-label="Sample questions"></div>
+      <div class="presets" id="presets" aria-label="Examples"></div>
       <p id="status" class="status" role="status"></p>
     </section>
 
-    <section class="stage" aria-live="polite">
+    <section class="stage" id="result">
+      <div aria-live="polite">
       <h2>Result</h2>
-      <div id="verdict" class="verdict">Ask a question. The page calls the local Python library.</div>
+      <div id="verdict" class="verdict" tabindex="-1">Ask a question or paste an answer. The page calls the local Python library.</div>
+      <div id="question-result"></div>
+      <ul id="claims" class="claims"></ul>
       <div id="ghost-host"></div>
+      <p id="quote-label" class="hint" hidden>Quoted clause</p>
       <blockquote id="quote" hidden></blockquote>
+      </div>
 
       <h2>Source <span id="doc-id" class="doc-id"></span></h2>
-      <article id="source" class="source">Loading the synthetic fixture…</article>
+      <article id="source" class="source" tabindex="0">Loading the synthetic fixture…</article>
     </section>
   </main>
 
   <footer>
-    <p>Run <code>python3 demos/haunted/server.py</code> from the repo root, then open the printed localhost URL. <code>python3 -m http.server</code> only serves these files; the answers come from this script so the page uses the same ranker as the evals.</p>
+    <p>From the repo root run <code>python3 demos/haunted/server.py</code>, then open the printed localhost URL. <code>python3 -m http.server</code> only serves these files. Answers come from <code>DocumentAgent</code>.</p>
   </footer>
   <script src="app.js"></script>
 </body>
