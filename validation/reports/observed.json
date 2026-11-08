@@ -3,8 +3,8 @@
   "app": "grave-truth",
   "repo": "https://github.com/igoreduardoai/grave-truth",
   "mode": "local",
-  "commit": "c036b77eb74e7f15e97e490a0e3fa44617fdee11",
-  "date": "2026-11-08T18:21:07+00:00",
+  "commit": "970e3f3d966c09d0ff20e9ad8f191c1e95d24e67",
+  "date": "2026-11-08T18:22:28+00:00",
   "cost_usd_observed": 0.0,
   "model_api_calls": 0,
   "decision": {
@@ -127,8 +127,8 @@
       "status": "diagnostic",
       "exercised": true,
       "lighthouse_version": "13.6.0",
-      "requested_url": "http://127.0.0.1:46163/",
-      "fetch_time": "2026-11-08T18:21:27.311Z",
+      "requested_url": "http://127.0.0.1:37049/",
+      "fetch_time": "2026-11-08T18:22:47.994Z",
       "form_factor": "mobile",
       "throttling_method": "simulate",
       "screen_emulation_mobile": true,
@@ -143,11 +143,11 @@
         }
       },
       "metrics": {
-        "first-contentful-paint": 901.1523,
-        "largest-contentful-paint": 901.1523,
+        "first-contentful-paint": 901.3438000000001,
+        "largest-contentful-paint": 901.3438000000001,
         "total-blocking-time": 0,
         "cumulative-layout-shift": 0,
-        "speed-index": 901.1523
+        "speed-index": 901.3438000000001
       },
       "note": "Laboratory figures from this machine. Not a field measurement, not a harness pass/fail gate, and not a quality score for the product."
     },
@@ -925,11 +925,10 @@
         "validation/reports/evidence/adapter-test-double/step-03.png",
         "validation/reports/evidence/adapter-test-double/step-04.png"
       ],
-      "final_url": "http://127.0.0.1:46163/",
+      "final_url": "http://127.0.0.1:37049/",
       "final_host": "127.0.0.1",
       "off_allowlist_requests": [],
       "response_hosts": [
-        "127.0.0.1",
         "127.0.0.1",
         "127.0.0.1"
       ],
@@ -963,7 +962,7 @@
         "validation/reports/evidence/safety-probe/step-02.png",
         "validation/reports/evidence/safety-probe/step-03.png"
       ],
-      "final_url": "http://127.0.0.1:44727/",
+      "final_url": "http://127.0.0.1:46063/",
       "final_host": "127.0.0.1",
       "off_allowlist_requests": [],
       "response_hosts": [],

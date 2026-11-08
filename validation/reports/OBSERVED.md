@@ -1,7 +1,7 @@
 # Observed validation run
 
-- Date: 2026-11-08T18:21:07+00:00
-- Commit: `c036b77eb74e7f15e97e490a0e3fa44617fdee11`
+- Date: 2026-11-08T18:22:28+00:00
+- Commit: `970e3f3d966c09d0ff20e9ad8f191c1e95d24e67`
 - Mode: local
 - Observed cost: $0.0 (model API calls: 0)
 - App config: `grave-truth`
@@ -52,11 +52,11 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 ## Lighthouse laboratory diagnostic
 
 - Lighthouse 13.6.0, form factor mobile, throttling simulate, mobile emulation True
-- first-contentful-paint: 901.1523
-- largest-contentful-paint: 901.1523
+- first-contentful-paint: 901.3438000000001
+- largest-contentful-paint: 901.3438000000001
 - total-blocking-time: 0
 - cumulative-layout-shift: 0
-- speed-index: 901.1523
+- speed-index: 901.3438000000001
 - lab category performance: 1
 - lab category best-practices: 0.96
 - Laboratory figures from this machine. Not a field measurement, not a harness pass/fail gate, and not a quality score for the product.
