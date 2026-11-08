@@ -1,0 +1,38 @@
+{
+  "event": "Kiroween 2026",
+  "source": "https://kiroween.devpost.com/rules",
+  "also_read": "https://kiroween.devpost.com/",
+  "retrieved": "2026-11-08",
+  "verification": "Criteria text below was read from the public Devpost pages on 2026-11-08. This file is not a live rules check.",
+  "weights": "The event page described five criteria. This file does not assign numeric weights as a score.",
+  "eligibility": "manual",
+  "deadlines": "manual",
+  "fail_closed": true,
+  "criteria": [
+    {
+      "id": "impact",
+      "name": "Potential Impact",
+      "quote": "Does the project make a credible case for solving a real problem for a real audience? Does the solution address that problem based on what's demonstrated?"
+    },
+    {
+      "id": "technical",
+      "name": "Technological Implementation",
+      "quote": "How thoroughly and skillfully does the project use Kiro? Was there a thoughtful strategy to AI development?"
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "quote": "Does the project deliver a complete, coherent product experience, not just a technical proof of concept?"
+    },
+    {
+      "id": "innovation",
+      "name": "Innovation/Idea",
+      "quote": "How creative and novel is the concept, and does the project differ from existing concepts?"
+    },
+    {
+      "id": "presentation",
+      "name": "Presentation",
+      "quote": "Does the video clearly demonstrate the project working end-to-end?"
+    }
+  ]
+}

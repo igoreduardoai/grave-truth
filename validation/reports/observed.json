@@ -3,8 +3,8 @@
   "app": "grave-truth",
   "repo": "https://github.com/igoreduardoai/grave-truth",
   "mode": "local",
-  "commit": "970e3f3d966c09d0ff20e9ad8f191c1e95d24e67",
-  "date": "2026-11-08T18:22:28+00:00",
+  "commit": "34e94d04e5af963b05099900bcb31e314bc3ebc0",
+  "date": "2026-11-08T18:28:52+00:00",
   "cost_usd_observed": 0.0,
   "model_api_calls": 0,
   "decision": {
@@ -38,7 +38,7 @@
       "layer": "pytest_and_gold",
       "exercised": true,
       "pytest": {
-        "passed": 60,
+        "passed": 71,
         "failed": null,
         "skipped": null,
         "errors": null,
@@ -127,8 +127,8 @@
       "status": "diagnostic",
       "exercised": true,
       "lighthouse_version": "13.6.0",
-      "requested_url": "http://127.0.0.1:37049/",
-      "fetch_time": "2026-11-08T18:22:47.994Z",
+      "requested_url": "http://127.0.0.1:38831/",
+      "fetch_time": "2026-11-08T18:29:11.519Z",
       "form_factor": "mobile",
       "throttling_method": "simulate",
       "screen_emulation_mobile": true,
@@ -143,11 +143,11 @@
         }
       },
       "metrics": {
-        "first-contentful-paint": 901.3438000000001,
-        "largest-contentful-paint": 901.3438000000001,
+        "first-contentful-paint": 901.5072,
+        "largest-contentful-paint": 901.5072,
         "total-blocking-time": 0,
         "cumulative-layout-shift": 0,
-        "speed-index": 901.3438000000001
+        "speed-index": 901.5072
       },
       "note": "Laboratory figures from this machine. Not a field measurement, not a harness pass/fail gate, and not a quality score for the product."
     },
@@ -184,6 +184,80 @@
       "kind": "llm_persona",
       "calls": 0,
       "cost_usd_observed": 0
+    },
+    "adjudication_loop": {
+      "status": "exercised",
+      "ok": true,
+      "exercised": true,
+      "kind": "scripted_fixture_simulation",
+      "live_loop_validated": false,
+      "scenarios": [
+        {
+          "scenario": "repair_demo",
+          "stop": "improved_and_clear",
+          "expected_stop": "improved_and_clear",
+          "matched": true,
+          "repairs_accepted": 1,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "no_improvement",
+          "stop": "no_improvement",
+          "expected_stop": "no_improvement",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "malformed",
+          "stop": "malformed_judge_output",
+          "expected_stop": "malformed_judge_output",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "unsupported",
+          "stop": "unsupported_critique",
+          "expected_stop": "unsupported_critique",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "missing_rubric",
+          "stop": "missing_rubric",
+          "expected_stop": "missing_rubric",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "protected",
+          "stop": "protected_submission",
+          "expected_stop": "protected_submission",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "unsafe",
+          "stop": "unsafe_repair",
+          "expected_stop": "unsafe_repair",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        },
+        {
+          "scenario": "failed_blocks_ready",
+          "stop": "failed_checks_block_ready",
+          "expected_stop": "failed_checks_block_ready",
+          "matched": true,
+          "repairs_accepted": 0,
+          "live_loop_validated": false
+        }
+      ],
+      "note": "Scripted evaluator and critic fixtures. Not live model judges."
     }
   },
   "holdout": {
@@ -925,7 +999,7 @@
         "validation/reports/evidence/adapter-test-double/step-03.png",
         "validation/reports/evidence/adapter-test-double/step-04.png"
       ],
-      "final_url": "http://127.0.0.1:37049/",
+      "final_url": "http://127.0.0.1:38831/",
       "final_host": "127.0.0.1",
       "off_allowlist_requests": [],
       "response_hosts": [
@@ -962,7 +1036,7 @@
         "validation/reports/evidence/safety-probe/step-02.png",
         "validation/reports/evidence/safety-probe/step-03.png"
       ],
-      "final_url": "http://127.0.0.1:46063/",
+      "final_url": "http://127.0.0.1:40009/",
       "final_host": "127.0.0.1",
       "off_allowlist_requests": [],
       "response_hosts": [],

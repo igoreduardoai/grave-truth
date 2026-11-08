@@ -128,6 +128,12 @@ def render_markdown(report: dict) -> str:
     for name, layer in report["layers"].items():
         status = layer.get("status") or ("ok" if layer.get("ok") else "not ok")
         lines.append(f"- {name}: {status}")
+    loop = (report["layers"].get("adjudication_loop") or {})
+    if loop.get("scenarios"):
+        lines.extend(["", "## Adjudication loop", ""])
+        lines.append("- Scripted fixtures. Live evaluator/critic was not validated.")
+        for item in loop["scenarios"]:
+            lines.append(f"- {item['scenario']}: {item['stop']} (expected {item['expected_stop']})")
     lines.extend(["", "## axe-core", ""])
     axe = report["layers"].get("axe_core") or {}
     lines.append(f"- violations: {axe.get('violation_count')}")

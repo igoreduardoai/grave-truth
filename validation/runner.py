@@ -13,6 +13,7 @@ from validation.browser_run import run_browser_layers
 from validation.config import PACKAGE, load_app
 from validation.gold import run_gold
 from validation.persona import llm_persona_status
+from validation.adjudication.loop import run_all_scenarios
 from validation.holdout_eval import measure as measure_holdout
 from validation.readiness import decide
 from validation.report import build_report, summarize_profiles, write_report
@@ -74,6 +75,7 @@ def execute(config: dict) -> tuple[dict, bool]:
     negative = browser["negative"]
     profiles = _relativize(browser["profiles"], ROOT)
     holdout = measure_holdout(ROOT)
+    adjudication = run_all_scenarios(ROOT)
     journeys_ok = all(item["completed"] for item in profiles)
     stability = browser.get("stability") or {}
     if stability.get("status") == "exercised" and not stability.get("stable"):
@@ -118,6 +120,15 @@ def execute(config: dict) -> tuple[dict, bool]:
         },
         "stability": stability,
         "persona_llm": llm,
+        "adjudication_loop": {
+            "status": "exercised" if adjudication["ok"] else "failed",
+            "ok": adjudication["ok"],
+            "exercised": True,
+            "kind": adjudication["kind"],
+            "live_loop_validated": adjudication["live_loop_validated"],
+            "scenarios": adjudication["scenarios"],
+            "note": "Scripted evaluator and critic fixtures. Not live model judges.",
+        },
     }
     contrast = None
     for state in axe.get("states") or []:
@@ -169,12 +180,12 @@ def execute(config: dict) -> tuple[dict, bool]:
     })
     report["cost_usd_observed"] = float(llm.get("cost_usd_observed") or 0) + float(double.get("cost_usd_observed") or 0)
     report["contrast"] = contrast
-    ok = _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability)
+    ok = _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability, adjudication["ok"])
     report["automated_commands_ok"] = ok
     return report, ok
 
 
-def _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability) -> bool:
+def _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability, adjudication_ok) -> bool:
     stable = stability.get("status") != "exercised" or stability.get("stable") is True
     return bool(
         gold["ok"]
@@ -187,6 +198,7 @@ def _ok(gold, profiles, negative, double, probe, axe, lighthouse, stability) -> 
         and axe.get("exercised")
         and lighthouse.get("status") == "diagnostic"
         and stable
+        and adjudication_ok
     )
 
 

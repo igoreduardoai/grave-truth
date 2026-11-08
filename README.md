@@ -142,7 +142,8 @@ Gold cases live in `evals/gold_cases.json`.
 Last local run (2026-11-08), on this working tree:
 
 - `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22). The cited and not-found answer texts were unchanged from the pre-fix snapshot: **0 / 50** of those cases changed span or text.
-- `python3 -m pytest -q` → **60 passed**
+- `python3 -m pytest -q` → **71 passed**
+- `python3 -m validation.adjudication` → **8/8** scripted scenarios. The repair scenario sets `focusable` true and the retest passes. Live evaluator/critic was not validated.
 - `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes
 - Held-out file `evals/holdout_cases.json`, first measurement, not used to edit the ranker: **5 / 7** intended checks met. Misses: negation-only still quotes the negated sentence; `USD 240` is quoted because `240` is a number.
 - `python3 -m validation run` → scripted tasks **10/10**, citation **7/7**, refusal **3/3**, negative controls **3/3**, browser-guard probe caught, stability **2/2** identical marks on `eob-billed`, LLM persona skipped, observed cost $0. Decision: **insufficient-evidence**. See `validation/reports/OBSERVED.md`.

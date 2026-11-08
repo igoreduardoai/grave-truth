@@ -43,6 +43,12 @@ Both of these are required, and neither is set in the committed config:
 
 Ambient `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, and `AZURE_API_KEY` are not read when opt-in is off. If opt-in is on and `litellm` is not installed, the layer is skipped and no other model is called. Installing `litellm` can send page text to the provider named by the model string and can cost money. Do not point it at a real bill, a real lease, or anyone's personal information.
 
+## Adjudication loop
+
+`python3 -m validation.adjudication` runs eight scripted scenarios: one real repair and retest, plus stops for no improvement, malformed output, an unevidenced critique, a missing rubric, a frozen submission, an unsafe repair, and a failed check that subjective agreement cannot waive. Those reviewers are simulations. A live evaluator or critic is not called. Opt in with `VALIDATION_ADJUDICATION_OPT_IN=1` only when a free adapter exists; this build still skips it and does not read provider keys.
+
+Winner-pattern notes in `validation/seeds/` are cited research priors. They do not score the rubric and they do not override a failed check.
+
 ## Not included
 
 No new third-party package was added for the contradiction rule or the readiness report. The pins above are unchanged.

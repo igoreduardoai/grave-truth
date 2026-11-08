@@ -12,7 +12,7 @@
     "note": "Not submitted. New-work and eligibility rules are not automatically verified. Do not edit a frozen submitted entry."
   },
   "readiness": {
-    "mandatory": ["pytest_and_gold", "scripted_browser", "negative_controls", "browser_guards", "axe_core"],
+    "mandatory": ["pytest_and_gold", "scripted_browser", "negative_controls", "browser_guards", "axe_core", "adjudication_loop"],
     "diagnostic": ["lighthouse", "holdout", "stability"],
     "optional": ["persona_llm"],
     "manual": ["sponsor_new_work", "eligibility", "human_review"]
