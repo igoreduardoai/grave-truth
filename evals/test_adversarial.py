@@ -19,7 +19,7 @@ def _agent(case: dict) -> DocumentAgent:
 
 
 def test_adversarial_cases_match_the_conflict_rule():
-    assert len(CASES) == 8
+    assert len(CASES) == 17
     for case in CASES:
         ok, detail = evaluate_case(case, _agent(case))
         assert ok, f"{case['id']}: {detail}"

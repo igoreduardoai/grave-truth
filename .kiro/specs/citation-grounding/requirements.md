@@ -74,6 +74,7 @@ Grave Truth answers questions about an ingested plain-text document by quoting s
 2. WHEN those spans disagree THEN `reject_ungrounded_claim` SHALL return true for a claim that states only one of the figures.
 3. WHEN the same figure is written as `$240` and `$240.00` THEN the system SHALL NOT treat that pair as a conflict.
 4. WHEN a prefix contains `not`, `never`, `no`, or `without` THEN that figure SHALL NOT count as a positive assertion. IF another span states a positive figure for the same subject THEN the answer SHALL quote the positive span.
-5. WHEN the only span negates the figure THEN the current retrieval MAY still quote that sentence. That case is unsupported, not a settled amount.
+5. WHEN the only figure for that subject is negated THEN `answer` SHALL return `not found` and SHALL NOT quote the negated sentence.
 6. WHERE a question uses a paraphrase outside the alias list the system SHALL abstain instead of guessing.
 7. Instructions inside the source SHALL NOT suppress a citation and SHALL NOT be followed as commands.
+8. WHEN a number is immediately preceded by a currency code (`USD`, `EUR`, `GBP`, `CAD`, `AUD`, `CHF`, `JPY`, `CNY`, `INR`, `BRL`, or `MXN`) THEN that number SHALL NOT count as a parsed amount and SHALL NOT support a `$` claim. IF no parsed figure for the subject exists THEN `answer` SHALL return `not found`. IF a parsed `$` figure for the subject exists THEN the answer SHALL quote a span that contains that parsed figure.

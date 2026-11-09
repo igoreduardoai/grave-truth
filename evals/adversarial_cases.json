@@ -75,5 +75,73 @@
     "expect": "conflict",
     "must_include": ["$240.00", "$999.00"],
     "min_citations": 1
+  },
+  {
+    "id": "negation-only-never-copay",
+    "doc_id": "pasted-document",
+    "document": "The copay is never $15.00. The deductible is $150.00.",
+    "question": "What is the copay?",
+    "expect": "not_found"
+  },
+  {
+    "id": "negation-only-no-deposit",
+    "doc_id": "pasted-document",
+    "document": "No locker deposit of $500.00 is collected.",
+    "question": "What is the locker deposit?",
+    "expect": "not_found"
+  },
+  {
+    "id": "negation-only-without-lab-fee",
+    "doc_id": "pasted-document",
+    "document": "The lab fee is listed without a price of $12.50.",
+    "question": "What is the lab fee?",
+    "expect": "not_found"
+  },
+  {
+    "id": "negated-figure-does-not-support-positive-claim",
+    "doc_id": "pasted-document",
+    "document": "The copay is never $15.00.",
+    "question": "The copay is $15.00.",
+    "expect": "reject_ungrounded"
+  },
+  {
+    "id": "negated-claim-matches-negated-span",
+    "doc_id": "pasted-document",
+    "document": "The copay is never $15.00.",
+    "question": "The copay is never $15.00.",
+    "expect": "accept_grounded"
+  },
+  {
+    "id": "negation-after-figure-stays-cited",
+    "doc_id": "pasted-document",
+    "document": "The parking fee is $40.00 and is not a deposit.",
+    "question": "What is the parking fee?",
+    "expect": "cited",
+    "must_include": ["$40.00", "not a deposit"],
+    "max_citations": 1
+  },
+  {
+    "id": "currency-code-eur-abstains",
+    "doc_id": "pasted-document",
+    "document": "The copay is EUR 18. The deductible is $150.00.",
+    "question": "What is the copay?",
+    "expect": "not_found"
+  },
+  {
+    "id": "parsed-dollar-beats-eur",
+    "doc_id": "pasted-document",
+    "document": "The copay is EUR 18. The copay is $18.00.",
+    "question": "What is the copay?",
+    "expect": "cited",
+    "must_include": ["$18.00"],
+    "must_exclude": ["EUR"],
+    "max_citations": 1
+  },
+  {
+    "id": "eur-does-not-support-dollar-claim",
+    "doc_id": "pasted-document",
+    "document": "The copay is EUR 18.",
+    "question": "The copay is $18.00.",
+    "expect": "reject_ungrounded"
   }
 ]

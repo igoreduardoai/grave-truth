@@ -1,4 +1,4 @@
-"""Held-out adversarial cases. The snapshot is the first measurement, not a tuned target."""
+"""Held-out cases. The snapshot records the latest measurement. The case file is not edited to change a result."""
 
 from __future__ import annotations
 

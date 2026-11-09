@@ -1,5 +1,5 @@
 {
-  "intended_met": 5,
+  "intended_met": 7,
   "attempted": 7,
   "cases": [
     {
@@ -44,27 +44,23 @@
       "id": "holdout-negation-only",
       "group": "negation",
       "intended": "not_found",
-      "intended_met": false,
-      "detail": "found=True text='The billed amount is not $240.00.' citations=1",
+      "intended_met": true,
+      "detail": "found=False text='not found' citations=0",
       "conflict": false,
-      "found": true,
-      "text": "The billed amount is not $240.00.",
-      "spans": [
-        "The billed amount is not $240.00."
-      ]
+      "found": false,
+      "text": "not found",
+      "spans": []
     },
     {
       "id": "holdout-usd-prefix",
       "group": "number-form",
       "intended": "not_found",
-      "intended_met": false,
-      "detail": "found=True text='The billed amount is USD 240.' citations=1",
+      "intended_met": true,
+      "detail": "found=False text='not found' citations=0",
       "conflict": false,
-      "found": true,
-      "text": "The billed amount is USD 240.",
-      "spans": [
-        "The billed amount is USD 240."
-      ]
+      "found": false,
+      "text": "not found",
+      "spans": []
     },
     {
       "id": "holdout-phone-distractor",

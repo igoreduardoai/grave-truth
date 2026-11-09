@@ -73,6 +73,11 @@ _MIN_SCORE = 0.22
 _NEAR_TIE = 0.55
 _SUBJECT_WINDOW = 60
 _NEGATION = re.compile(r"\b(?:not|never|no|without)\b", re.IGNORECASE)
+# A currency code is not a parsed amount. `$18` and `EUR 18` are not the same evidence.
+_CURRENCY_CODE = re.compile(
+    r"\b(?:USD|EUR|GBP|CAD|AUD|CHF|JPY|CNY|INR|BRL|MXN)\s*$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -153,13 +158,15 @@ class DocumentAgent:
         hits = self.retrieve(question, limit=2)
         if not hits:
             return _not_found()
-        negated = _primary_chunks(self._chunks, question, negated=True)
-        if negated:
-            positive = _primary_chunks(self._chunks, question, negated=False)
-            if positive:
-                neg_keys = {(chunk.doc_id, chunk.start, chunk.end) for chunk in negated}
-                kept = [hit for hit in hits if (hit.doc_id, hit.start, hit.end) not in neg_keys]
-                hits = kept or positive[:2]
+        negated = _primary_chunks(self._chunks, question, kind="negated")
+        positive = _primary_chunks(self._chunks, question, kind="parsed")
+        currency = _primary_chunks(self._chunks, question, kind="currency")
+        hits = _prefer_parsed(hits, negated, positive)
+        if hits is None:
+            return _not_found()
+        hits = _prefer_parsed(hits, currency, positive)
+        if hits is None:
+            return _not_found()
         return self._quote(hits, conflict=False)
 
     def _quote(self, chunks: list[_Chunk], *, conflict: bool) -> GroundedAnswer:
@@ -402,10 +409,22 @@ def _norm_number(raw: str) -> str | None:
     return f"{kind}:{rendered or '0'}"
 
 
+def _figure_kind(prefix: str) -> str:
+    """How the words in front of a number present that number."""
+    if _NEGATION.search(prefix):
+        return "negated"
+    if _CURRENCY_CODE.search(prefix):
+        return "currency"
+    return "parsed"
+
+
 def _norm_numbers(text: str) -> set[str]:
     found: set[str] = set()
-    for raw in _NUMBER.findall(text):
-        norm = _norm_number(raw)
+    for match in _NUMBER.finditer(text):
+        prefix = text[max(0, match.start() - _SUBJECT_WINDOW):match.start()]
+        if _figure_kind(prefix) == "currency":
+            continue
+        norm = _norm_number(match.group(0))
         if norm:
             found.add(norm)
     return found
@@ -422,14 +441,15 @@ def _numbers_covered(text: str, spans: list[str]) -> bool:
     return all(number in allowed for number in _NUMBER.findall(text))
 
 
-def _subject_hits(text: str) -> list[tuple[str, set[str], bool]]:
-    """Numbers, the subject words in front of them, and whether that prefix negates them.
+def _subject_hits(text: str) -> list[tuple[str, set[str], str]]:
+    """Numbers, the subject words in front of them, and how that prefix presents them.
 
     The prefix stops at the previous number, so a later figure in the same
-    sentence is not given the earlier subject for free.
+    sentence is not given the earlier subject for free. `negated` and
+    `currency` are not positive assertions. `parsed` is.
     """
     matches = list(_NUMBER.finditer(text))
-    hits: list[tuple[str, set[str], bool]] = []
+    hits: list[tuple[str, set[str], str]] = []
     for index, match in enumerate(matches):
         norm = _norm_number(match.group(0))
         if norm is None:
@@ -440,12 +460,12 @@ def _subject_hits(text: str) -> list[tuple[str, set[str], bool]]:
         prefix = text[max(0, left):match.start()]
         window = {tok for tok in _token_list(prefix) if not _is_number_token(tok)}
         if window:
-            hits.append((norm, window, bool(_NEGATION.search(prefix))))
+            hits.append((norm, window, _figure_kind(prefix)))
     return hits
 
 
 def _positive_subject_hits(text: str) -> list[tuple[str, set[str]]]:
-    return [(norm, window) for norm, window, negated in _subject_hits(text) if not negated]
+    return [(norm, window) for norm, window, kind in _subject_hits(text) if kind == "parsed"]
 
 
 def _contradictory_chunks(chunks: list[_Chunk], question: str) -> list[_Chunk]:
@@ -489,8 +509,8 @@ def _contradictory_chunks(chunks: list[_Chunk], question: str) -> list[_Chunk]:
     return chosen
 
 
-def _primary_chunks(chunks: list[_Chunk], question: str, *, negated: bool) -> list[_Chunk]:
-    """Chunks whose figure for the question's rarest subject word is negated or not."""
+def _primary_chunks(chunks: list[_Chunk], question: str, *, kind: str) -> list[_Chunk]:
+    """Chunks whose figure for the question's rarest subject word has this kind."""
     query_tokens, _bigrams = _analyze_query(question)
     q_terms = {tok for tok in query_tokens if not _is_number_token(tok)}
     if not q_terms or not chunks:
@@ -501,8 +521,8 @@ def _primary_chunks(chunks: list[_Chunk], question: str, *, negated: bool) -> li
     chosen: list[_Chunk] = []
     seen: set[tuple[str, int, int]] = set()
     for chunk in chunks:
-        for _norm, window, is_negated in _subject_hits(chunk.text):
-            if is_negated != negated:
+        for _norm, window, hit_kind in _subject_hits(chunk.text):
+            if hit_kind != kind:
                 continue
             overlap = window & q_terms
             if primary not in overlap:
@@ -518,12 +538,39 @@ def _primary_chunks(chunks: list[_Chunk], question: str, *, negated: bool) -> li
     return chosen
 
 
+def _prefer_parsed(
+    hits: list[_Chunk],
+    blocked: list[_Chunk],
+    parsed: list[_Chunk],
+) -> list[_Chunk] | None:
+    """Drop blocked spans. Abstain when they were the only hits and nothing parsed remains."""
+    if not blocked:
+        return hits
+    blocked_keys = {(chunk.doc_id, chunk.start, chunk.end) for chunk in blocked}
+    kept = [hit for hit in hits if (hit.doc_id, hit.start, hit.end) not in blocked_keys]
+    if kept:
+        return kept
+    if parsed:
+        return parsed[:2]
+    return None
+
+
 def _number_supported(claim: str, span: str, norm: str) -> bool:
+    claim_kinds = {
+        _figure_kind(claim[max(0, match.start() - _SUBJECT_WINDOW):match.start()])
+        for match in _NUMBER.finditer(claim)
+        if _norm_number(match.group(0)) == norm
+    }
+    claim_kinds.discard("currency")
+    if not claim_kinds:
+        return False
     subjects: set[str] = set()
     for match in _NUMBER.finditer(span):
         if _norm_number(match.group(0)) != norm:
             continue
         prefix = span[max(0, match.start() - _SUBJECT_WINDOW):match.start()]
+        if _figure_kind(prefix) not in claim_kinds:
+            continue
         subjects.update(_token_list(prefix))
     if not subjects:
         return False

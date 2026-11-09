@@ -1,8 +1,12 @@
 # Grave Truth
 
-A citation-grounded document-agent skeleton for [Kiroween 2026](https://kiroween.devpost.com/), Skeleton Crew. Every answer quotes a source span or says `not found`. A number from one clause cannot support a different subject.
+The task is to read one explanation of benefits, or one lease clause, and see which line supports a claim. On the synthetic fixtures, patient responsibility (`$42.15`) is not the pharmacy charge (`$18.40`), and the security deposit (`$1,850.00`) is not monthly rent even though the figure is the same. Without the checker, the workaround is to scan the page for the figure and decide by eye whether the words next to it are the right subject.
 
-Skeleton Crew here means two applications on one library, with the specs, steering, and hooks committed in `.kiro` (that directory is not gitignored). The haunted page is a third view of the same library. It does not carry a second ranker.
+Grave Truth runs that check on the fixture. A claim stays on the page, with a Cited badge, only when a source span contains it, and that clause is marked in gold. A claim with no supporting span is a ghost: the sentence fades and the badge says Ghost. The page does not invent a third number to fill the gap.
+
+The mechanism is cited-or-ghost grounding in `DocumentAgent` (`src/grave_truth/skeleton.py`). `answer` quotes a sentence span or returns `not found`. `reject_ungrounded_claim` returns true when the number sits in a different clause, when the only figure for that subject is negated (`not`, `never`, `no`, or `without` in front of the number), or when the only amount is a currency code the parser does not treat as dollars (`EUR 18`, and the other codes listed in the library). A parsed `$` figure for the same subject is still quoted. The haunted page posts to a local process that calls this library. It does not reimplement the checker and it does not send the document anywhere.
+
+This is a [Kiroween 2026](https://kiroween.devpost.com/) Skeleton Crew project. Skeleton Crew here means two applications on one library. The Kiro pieces that are actually in the repo are the specs, steering files, and hooks under `.kiro/` (that directory is not gitignored). This run did not record a Kiro IDE session. The haunted page is a third view of the same library. It does not carry a second ranker. The evaluator and critic in `validation/adjudication` are scripted simulations, not independent judges. A live model judge was not called.
 
 Two applications share that skeleton:
 
@@ -90,9 +94,9 @@ print(result.citations[0].span)
 1. `DocumentAgent.ingest` stores a document and splits it into sentence spans. Ingesting the same id again replaces those spans.
 2. `retrieve` ranks spans by token overlap. Boilerplate such as "explanation of benefits" does not outvote a subject word. A question that names a subject the file does not contain returns no spans.
 3. `answer` quotes the winning span, or two spans when the question covers two subjects. A bare shared amount cites each clause that contains it. Every number in the answer text is in a cited span. Offsets slice the source.
-4. `reject_ungrounded_claim` returns true when a number or id (`CLM-20481`) is missing, or when the number sits in a different clause. `$1,850.00` and `1850` are the same value. `20%` is not `20`.
+4. `reject_ungrounded_claim` returns true when a number or id (`CLM-20481`) is missing, when the number sits in a different clause, when the figure's prefix negates it and no positive figure for that subject exists, or when the amount is only a currency code such as `EUR` or `USD`. `$1,850.00` and `1850` are the same value. `20%` is not `20`. `EUR 18` is not `$18.00`.
 
-Uncited claims do not survive as answers (`GroundedAnswer.ghost`).
+Uncited claims do not survive as answers (`GroundedAnswer.ghost`). A question whose only matching figure is negated, or whose only amount uses an unparsed currency code, is `not found`.
 
 A few question-side aliases (`doctor` → `provider`, `renter` → `resident`, `termination` → `terminate`) only help retrieval. The printed answer is still the original sentence.
 
@@ -139,27 +143,29 @@ Gold cases live in `evals/gold_cases.json`.
 | accept_grounded | 22 |
 | **Total** | **90** |
 
-Last local run (2026-11-08), on this working tree:
+Measured on this working tree on 2026-11-09. Commands and exits:
 
-- `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22). The cited and not-found answer texts were unchanged from the pre-fix snapshot: **0 / 50** of those cases changed span or text.
-- `python3 -m pytest -q` → **71 passed**
-- `python3 -m validation.adjudication` → **8/8** scripted scenarios. The repair scenario sets `focusable` true and the retest passes. Live evaluator/critic was not validated.
-- `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes
-- Held-out file `evals/holdout_cases.json`, first measurement, not used to edit the ranker: **5 / 7** intended checks met. Misses: negation-only still quotes the negated sentence; `USD 240` is quoted because `240` is a number.
-- `python3 -m validation run` → scripted tasks **10/10**, citation **7/7**, refusal **3/3**, negative controls **3/3**, browser-guard probe caught, stability **2/2** identical marks on `eob-billed`, LLM persona skipped, observed cost $0. Decision: **insufficient-evidence**. See `validation/reports/OBSERVED.md`.
+- `python3 evals/run_evals.py` → exit 0, **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22).
+- `python3 -m pytest -q` → exit 0, **74 passed**, 0 failed.
+- `python3 -m validation.adjudication` → exit 0, **8/8** scripted scenarios. The repair scenario sets `focusable` true and the retest passes. These reviewers are scripted simulations, not independent judges. Live evaluator/critic was not validated.
+- `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes.
+- `evals/holdout_cases.json` was not edited. The remeasurement in `evals/holdout_observed.json` is **7/7** intended checks met. The two rows that previously quoted a negated sentence and a `USD` amount now return `not found`. The new regressions are different documents in `evals/adversarial_cases.json` (a copay that is never `$15.00`, a locker deposit that is not collected, a lab fee listed without a price, and `EUR 18` beside a deductible).
+- `python3 -m validation run` → exit 0 for the automated commands. Scripted tasks **10/10**, citation **7/7**, refusal **3/3**, negative controls **3/3**, browser-guard probe caught, stability **2/2** identical marks on `eob-billed`, axe-core violations **0**, incomplete **0** (color-contrast resolved on the initial page and the cited EOB state), LLM persona skipped, observed cost $0. Decision: **insufficient-evidence**, because sponsor/new-work, eligibility, and human review are still manual. See `validation/reports/OBSERVED.md`. Lighthouse figures in that report are laboratory diagnostics, not a grade.
 
-Before the contradiction change, the pasted document that says the billed amount is both `$999.00` and `$240.00` returned only the `$999.00` sentence. After it, `conflict` is true and both original spans are cited. The original 90 gold cases still pass.
+The contradictory billed-amount case still cites both original spans and sets `conflict`. The 90 gold cases still pass. Nothing here is a prize estimate or a quality score.
 
 ## Limits
 
 - Research demo. Not a medical device. Not legal advice. Not a coverage decision and not a contract review.
-- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches.
+- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches. The demo and this file are English-primary.
 - Two different figures for the same subject are a conflict. The answer cites both original spans and does not pick one. `$240` and `$240.00` are the same figure. A claim that names only one side of a conflict is rejected.
-- A negated figure (`not`, `never`, `no`, `without` in front of the number) is ignored when another span states a positive figure for that subject. A file that only says the billed amount is not `$240.00` can still be quoted. `USD 240` is not a separate currency parser; the sentence can be quoted because `240` is a number. Those two gaps are in the holdout, 2 of 7 intended checks missed on the first measurement.
+- A negated figure is not a positive amount. If another span states a positive figure for that subject, the answer quotes the positive span. If the only figure is negated, the answer is `not found`.
+- A currency code immediately before a number is not a parsed dollar amount. `EUR 18` does not support `$18.00`. If a `$` figure for that subject is also in the file, the answer quotes the `$` span. There is no general currency converter.
 - The pharmacy charge (`$18.40`) and the patient responsibility (`$42.15`) are different clauses. The late fee (`$75.00`) is not monthly rent (`$1,850.00`). Same value with a different `$` or comma form still counts as that value.
 - Citations are sentences. A sentence that contains two dates is quoted whole.
 - The agent quotes the file. It does not know whether the file is true outside that file.
-- One synthetic document per app. No insurer, clinic, or landlord has used this software.
+- One synthetic document per app. No insurer, clinic, or landlord has used this software. There is no measured demand, efficacy, or field comparison.
+- Sponsor rules, eligibility, and a human review of the demo are not automatically verified. The decision stays `insufficient-evidence` until those are recorded. No Kiro IDE recording and no demo video are in this run.
 - Same numeric value with different `$` / comma formatting counts as one number. A different value is rejected even if it appears next to another subject.
 
 ## License
