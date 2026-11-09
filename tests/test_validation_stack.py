@@ -201,6 +201,55 @@ def test_contrast_ratio_for_the_declared_gold_on_background():
     assert round(ratio, 2) == 13.17
 
 
+def test_gradient_background_is_not_a_resolved_contrast():
+    from validation.contrast import assess_rendered_text
+
+    result = assess_rendered_text(
+        color="rgb(240, 212, 138)",
+        font_size="12px",
+        font_weight="400",
+        opacity="1",
+        layers=[
+            {
+                "backgroundColor": "rgba(0, 0, 0, 0)",
+                "backgroundImage": "none",
+                "opacity": "1",
+            },
+            {
+                "backgroundColor": "rgb(18, 14, 22)",
+                "backgroundImage": "radial-gradient(at 50% -10%, rgba(240, 212, 138, 0.1), rgba(0, 0, 0, 0) 46%)",
+                "opacity": "1",
+            },
+        ],
+    )
+    assert result["resolvable"] is False
+    assert result["passes"] is False
+    assert result["reason"] == "background gradient"
+
+
+def test_solid_low_contrast_fails_and_gold_on_background_passes():
+    from validation.contrast import assess_rendered_text
+
+    low = assess_rendered_text(
+        color="rgb(246, 241, 230)",
+        font_size="16px",
+        font_weight="400",
+        opacity="1",
+        layers=[{"backgroundColor": "rgb(240, 212, 138)", "backgroundImage": "none", "opacity": "1"}],
+    )
+    assert low["resolvable"] is True
+    assert low["passes"] is False
+    gold = assess_rendered_text(
+        color="rgb(240, 212, 138)",
+        font_size="12px",
+        font_weight="400",
+        opacity="1",
+        layers=[{"backgroundColor": "rgb(18, 14, 22)", "backgroundImage": "none", "opacity": "1"}],
+    )
+    assert gold["passes"] is True
+    assert gold["ratio"] == 13.17
+
+
 def test_readiness_is_not_ready_when_a_mandatory_check_is_skipped():
     from validation.readiness import decide
 

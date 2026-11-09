@@ -30,7 +30,7 @@ Synthetic EOB and lease text only. The profiles load or select a fixture, paste 
 
 A planted page that highlights `$999.00` must fail the citation check. A link to `https://example.com/out` must not be followed. Page text is data. The replay decider ignores instructions in the page.
 
-The checked-in result is `validation/reports/OBSERVED.md`. The decision is `ready`, `not-ready`, or `insufficient-evidence` from the app config. Grave Truth stays `insufficient-evidence` while sponsor rules are manual and the holdout has misses. A skipped mandatory check is `not-ready`. There is no quality score.
+The checked-in result is `validation/reports/OBSERVED.md`. The decision is `ready`, `not-ready`, or `insufficient-evidence` from the app config. Grave Truth stays `insufficient-evidence` while sponsor rules, eligibility, and human review are manual. A skipped mandatory check is `not-ready`. There is no quality score.
 
 Traces from the latest run stay under `validation/reports/runs/`, which is gitignored. Screenshots of the synthetic pages are in `validation/reports/evidence/`.
 

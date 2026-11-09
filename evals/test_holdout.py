@@ -1,6 +1,5 @@
-"""The held-out file is compared with the first measurement. It is not a accuracy claim."""
+"""The held-out file is compared with the recorded measurement. It is not an accuracy claim."""
 
-import json
 from pathlib import Path
 
 from validation.holdout_eval import load_snapshot, measure
@@ -19,8 +18,11 @@ def test_holdout_measurement_matches_the_recorded_snapshot():
 
 
 def test_holdout_misses_stay_visible():
-    snapshot = json.loads((ROOT / "evals" / "holdout_observed.json").read_text(encoding="utf-8"))
+    """Every held-out row stays in the snapshot. A miss cannot be dropped from the record."""
+    current = measure(ROOT)
+    snapshot = load_snapshot(ROOT)
+    assert [row["id"] for row in snapshot["cases"]] == [row["id"] for row in current["cases"]]
     misses = [row["id"] for row in snapshot["cases"] if not row["intended_met"]]
-    assert misses == ["holdout-negation-only", "holdout-usd-prefix"]
-    assert snapshot["intended_met"] == 5
-    assert snapshot["attempted"] == 7
+    live = [row["id"] for row in current["cases"] if not row["intended_met"]]
+    assert live == misses == []
+    assert snapshot["intended_met"] == snapshot["attempted"] == 7

@@ -170,37 +170,60 @@ def _axe_state(browser, base_url, axe_path: Path, evidence: Path, traces: Path, 
 
 
 def _eyebrow_contrast(page) -> dict:
-    from validation.contrast import contrast_ratio, parse_rgb
+    from validation.contrast import assess_rendered_text
 
     style = page.evaluate(
         """() => {
           const el = document.querySelector('.eyebrow');
           if (!el) return null;
           const text = getComputedStyle(el);
+          const layers = [];
+          let current = el;
+          while (current) {
+            const computed = getComputedStyle(current);
+            layers.push({
+              backgroundColor: computed.backgroundColor,
+              backgroundImage: computed.backgroundImage,
+              opacity: computed.opacity,
+            });
+            current = current.parentElement;
+          }
           const body = getComputedStyle(document.body);
           return {
             color: text.color,
             fontSize: text.fontSize,
+            fontWeight: text.fontWeight,
+            opacity: text.opacity,
             backgroundColor: text.backgroundColor,
             bodyBackgroundColor: body.backgroundColor,
             bodyBackgroundImage: body.backgroundImage.slice(0, 220),
+            layers,
           };
         }"""
     )
     if not style:
         return {"status": "missing eyebrow"}
-    foreground = parse_rgb(style["color"])
-    ratio = round(contrast_ratio(foreground, (0x12, 0x0E, 0x16)), 2) if foreground else None
+    layers = style.pop("layers")
+    assessed = assess_rendered_text(
+        color=style["color"],
+        font_size=style["fontSize"],
+        font_weight=style["fontWeight"],
+        opacity=style["opacity"],
+        layers=layers,
+    )
     return {
         **style,
-        "declared_background": "#120e16",
-        "ratio_versus_declared_background": ratio,
-        "meets_wcag_aa_normal_text": bool(ratio is not None and ratio >= 4.5),
+        "ratio_versus_rendered_background": assessed["ratio"],
+        "ratio_versus_declared_background": assessed["ratio"],
+        "rendered_background": assessed.get("background"),
+        "resolvable": assessed["resolvable"],
+        "reason": assessed["reason"],
+        "meets_wcag_aa_normal_text": assessed["passes"],
         "axe_rule_disabled": False,
         "note": (
-            "Measured text color against the declared #120e16 background. "
-            "axe-core color-contrast stays enabled. Incomplete means axe could not "
-            "resolve the gradient background, which is not a waiver."
+            "Contrast is computed from the rendered text color and the opaque "
+            "background behind it. axe-core color-contrast stays enabled. A gradient "
+            "or image is unresolved, not a pass."
         ),
     }
 

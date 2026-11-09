@@ -32,7 +32,7 @@ The app config names mandatory, diagnostic, optional, and manual checks. Skipped
 
 ## Demo fixes found by the keyboard and axe passes
 
-The skip link pointed at `#result`, and that section could not take focus, so Enter changed the hash and left focus on `body`. The section now has `tabindex="-1"` and a visible focus outline. The examples container had `aria-label` on a generic `div`. It is now `role="group"`. axe-core's contrast check stays incomplete because the body background is a gradient. The eyebrow color `#f0d48a` on the declared background `#120e16` measures 13.17:1, above the 4.5:1 AA threshold for normal text. The rule is still enabled. The incomplete result stays in the report.
+The skip link pointed at `#result`, and that section could not take focus, so Enter changed the hash and left focus on `body`. The section now has `tabindex="-1"` and a visible focus outline. The examples container had `aria-label` on a generic `div`. It is now `role="group"`. The page background is the solid color `#120e16` with no gradient, so axe-core can resolve `color-contrast` on the initial page and the cited EOB state. `validation/contrast.py` computes the ratio from those rendered colors. The eyebrow `#f0d48a` on `#120e16` is 13.17:1. The rule stays enabled. An incomplete or failing result is not treated as a pass.
 
 ## What this design does not do
 
