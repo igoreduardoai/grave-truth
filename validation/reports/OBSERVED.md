@@ -1,7 +1,7 @@
 # Observed validation run
 
-- Date: 2026-11-08T18:28:52+00:00
-- Commit: `34e94d04e5af963b05099900bcb31e314bc3ebc0`
+- Date: 2026-11-09T15:21:33+00:00
+- Commit: `9a20da367e27d6333aa5fad3757eb5f4efa89bc4`
 - Mode: local
 - Observed cost: $0.0 (model API calls: 0)
 - App config: `grave-truth`
@@ -10,9 +10,8 @@
 ## Decision
 
 - **insufficient-evidence**
-- held-out intended behavior was not met on every case
 - manual checks are not approved: sponsor_new_work, eligibility, human_review
-- unresolved evidence: holdout intended 5/7: holdout-negation-only, holdout-usd-prefix; axe color-contrast incomplete remains; eyebrow versus #120e16 measured 13.17:1; the rule was not disabled; sponsor and new-work rules were not automatically verified
+- unresolved evidence: sponsor and new-work rules were not automatically verified
 - Manual items are not treated as passed.
 - This is not a prize estimate and not a quality score.
 
@@ -26,7 +25,7 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 
 ## Pytest and gold
 
-- pytest exit 0: passed 71, failed 0
+- pytest exit 0: passed 74, failed 0
 - gold exit 0: 90/90
 
 ## Layers
@@ -57,19 +56,17 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 ## axe-core
 
 - violations: 0
-- incomplete: 2
+- incomplete: 0
 - Rule findings are not a conformance certificate and are not a harness grade.
-- incomplete color-contrast on initial (21 nodes): Elements must meet minimum color contrast ratio thresholds
-- incomplete color-contrast on cited-eob (22 nodes): Elements must meet minimum color contrast ratio thresholds
 
 ## Lighthouse laboratory diagnostic
 
 - Lighthouse 13.6.0, form factor mobile, throttling simulate, mobile emulation True
-- first-contentful-paint: 901.5072
-- largest-contentful-paint: 901.5072
+- first-contentful-paint: 901.2829999999999
+- largest-contentful-paint: 901.2829999999999
 - total-blocking-time: 0
 - cumulative-layout-shift: 0
-- speed-index: 901.5072
+- speed-index: 901.2829999999999
 - lab category performance: 1
 - lab category best-practices: 0.96
 - Laboratory figures from this machine. Not a field measurement, not a harness pass/fail gate, and not a quality score for the product.
@@ -81,9 +78,7 @@ Scripted profiles are deterministic browser steps. They are not LLM synthetic us
 
 ## Holdout
 
-- Intended behavior met: 5 / 7
-- Miss holdout-negation-only: intended not_found; observed The billed amount is not $240.00.
-- Miss holdout-usd-prefix: intended not_found; observed The billed amount is USD 240.
+- Intended behavior met: 7 / 7
 
 ## Confirmed defects
 
