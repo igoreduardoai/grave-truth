@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from grave_truth.apps import eob, lease  # noqa: E402
+from grave_truth.artifact import build_artifact  # noqa: E402
+from grave_truth.health import HEALTH_BODY  # noqa: E402
 from grave_truth.skeleton import DocumentAgent  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -238,20 +240,37 @@ def document_payload(app: str) -> dict:
     }
 
 
+def _query(path: str) -> dict[str, str]:
+    query: dict[str, str] = {}
+    if "?" not in path:
+        return query
+    for part in path.split("?", 1)[1].split("&"):
+        if "=" in part:
+            key, value = part.split("=", 1)
+            query[key] = value
+    return query
+
+
 def route(method: str, path: str, body: bytes) -> tuple[int, str, bytes]:
     """Return status, content type, and body for one local request."""
     clean = path.split("?", 1)[0]
+    if method == "GET" and clean == "/health":
+        return 200, "application/json; charset=utf-8", HEALTH_BODY
+    if method == "GET" and clean == "/api/export":
+        app = _query(path).get("app", "")
+        try:
+            artifact = build_artifact(app)
+        except ValueError as exc:
+            return _error(400, str(exc))
+        if _query(path).get("format") == "markdown":
+            return 200, "text/markdown; charset=utf-8", artifact["markdown"].encode("utf-8")
+        return _json(200, artifact)
     if method == "GET" and clean in STATIC:
         name = STATIC[clean]
         data = (HERE / name).read_bytes()
         return 200, CONTENT_TYPES[name], data
     if method == "GET" and clean == "/api/document":
-        query = {}
-        if "?" in path:
-            for part in path.split("?", 1)[1].split("&"):
-                if "=" in part:
-                    key, value = part.split("=", 1)
-                    query[key] = value
+        query = _query(path)
         try:
             payload = document_payload(query.get("app", ""))
         except ValueError as exc:
@@ -281,6 +300,14 @@ def _error(status: int, message: str) -> tuple[int, str, bytes]:
     return _json(status, {"error": message})
 
 
+def _download_name(path: str, content_type: str) -> str | None:
+    if "markdown" not in content_type or path.split("?", 1)[0] != "/api/export":
+        return None
+    app = _query(path).get("app", "eob")
+    filename = "grave-truth-clause-issues.md" if app == "lease" else "grave-truth-dispute-letter.md"
+    return f'attachment; filename="{filename}"'
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         self._respond("GET", b"")
@@ -301,6 +328,9 @@ class Handler(BaseHTTPRequestHandler):
     def _write(self, status: int, content_type: str, data: bytes) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
+        disposition = _download_name(self.path, content_type)
+        if disposition:
+            self.send_header("Content-Disposition", disposition)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()

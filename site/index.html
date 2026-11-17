@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grave Truth — haunted clauses</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#result">Skip to result</a>
+  <header class="hero" id="hero">
+    <p class="eyebrow">Kiroween 2026 · Skeleton Crew · local only</p>
+    <h1>A figure stays only when the document states it.</h1>
+    <p class="lede">Grave Truth checks one synthetic explanation of benefits, or one synthetic lease. It quotes the sentence, or it says not found.</p>
+    <ol class="storyboard">
+      <li><span class="step">Input.</span> The patient responsibility is $42.15.</li>
+      <li><span class="step">Check.</span> That sentence is kept only when the synthetic bill states it. A penalty the bill never mentions is not found.</li>
+      <li><span class="step">Result.</span> A dispute letter or a clause list you can download. Each cited line is linked to its span. Anything else says not found.</li>
+    </ol>
+    <p class="disclaimer">Research demo on synthetic text. Not a medical device and not legal advice. Nothing is sent off this machine. Do not paste a real bill, a real lease, or anyone's personal information.</p>
+  </header>
+
+  <main>
+    <section class="controls">
+      <form id="ask-form">
+        <fieldset>
+          <legend>Document</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="app" value="eob" checked> Sample EOB</label>
+            <label class="choice"><input type="radio" name="app" value="lease"> Sample lease</label>
+            <label class="choice"><input type="radio" name="app" value="paste"> Paste a document</label>
+          </div>
+        </fieldset>
+
+        <div id="paste-field" hidden>
+          <label for="document">Pasted document</label>
+          <textarea id="document" name="document" rows="8" spellcheck="false" autocomplete="off" aria-describedby="document-hint"></textarea>
+          <p id="document-hint" class="hint">Synthetic text only. The checker ingests this text with the same library as the evals.</p>
+        </div>
+
+        <label for="question">Question</label>
+        <textarea id="question" name="question" rows="3" autocomplete="off">What is the patient responsibility?</textarea>
+
+        <label for="answer">Proposed answer</label>
+        <textarea id="answer" name="answer" rows="4" autocomplete="off" aria-describedby="answer-hint"></textarea>
+        <p id="answer-hint" class="hint">Optional. Each sentence is checked. A sentence with no supporting clause is a ghost. Ctrl+Enter checks.</p>
+
+        <button type="submit" class="ask">Check grounding</button>
+      </form>
+
+      <div class="presets" id="presets" role="group" aria-label="Examples"></div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="stage" id="result" tabindex="-1">
+      <div aria-live="polite">
+      <h2>Result</h2>
+      <div id="verdict" class="verdict" tabindex="-1">Ask a question or paste an answer. The page calls the local Python library.</div>
+      <div id="question-result"></div>
+      <ul id="claims" class="claims"></ul>
+      <div id="ghost-host"></div>
+      <p id="quote-label" class="hint" hidden>Quoted clause</p>
+      <blockquote id="quote" hidden></blockquote>
+      </div>
+
+      <h2>Source <span id="doc-id" class="doc-id"></span></h2>
+      <article id="source" class="source" tabindex="0">Loading the synthetic fixture…</article>
+
+      <h2>Workflow file</h2>
+      <p class="hint" id="artifact-note">The file lists each claim with the span that supports it, or with not found. Open <code>?judge=1</code> and the synthetic letter is filled with no second click.</p>
+      <p><a class="artifact-download" id="artifact-download" href="/api/export?app=eob&amp;format=markdown">Download the dispute letter</a></p>
+      <button type="button" id="build-file" class="ask">Build the workflow file</button>
+      <pre id="artifact">The letter appears here. No figure is added that the document does not state.</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>From the repo root run <code>python3 demos/haunted/server.py</code>, then open the printed localhost URL. <code>python3 -m http.server</code> only serves these files. Answers come from <code>DocumentAgent</code>.</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

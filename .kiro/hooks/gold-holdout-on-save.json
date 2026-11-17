@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "gold-and-holdout-on-save",
+      "description": "Re-run the gold suite and compare the held-out snapshot after the skeleton, fixtures, or evals change. The hook reads the holdout files. It does not edit them.",
+      "trigger": "PostFileSave",
+      "matcher": "(src/grave_truth/.*\\.py|evals/.*|fixtures/.*\\.txt)$",
+      "timeout": 180,
+      "action": {
+        "type": "command",
+        "command": "python3 evals/run_gold_and_holdout.py"
+      }
+    }
+  ]
+}

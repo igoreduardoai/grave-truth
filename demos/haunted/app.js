@@ -72,6 +72,20 @@ const quote = document.querySelector("#quote");
 const quoteLabel = document.querySelector("#quote-label");
 const source = document.querySelector("#source");
 const docId = document.querySelector("#doc-id");
+const artifact = document.querySelector("#artifact");
+const artifactDownload = document.querySelector("#artifact-download");
+const buildFile = document.querySelector("#build-file");
+
+const EXPORT_LINKS = {
+  eob: {
+    href: "/api/export?app=eob&format=markdown",
+    label: "Download the dispute letter",
+  },
+  lease: {
+    href: "/api/export?app=lease&format=markdown",
+    label: "Download the clause list",
+  },
+};
 
 document.querySelectorAll('input[name="app"]').forEach((input) => {
   input.addEventListener("change", () => {
@@ -82,6 +96,10 @@ document.querySelectorAll('input[name="app"]').forEach((input) => {
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   ask();
+});
+
+buildFile.addEventListener("click", () => {
+  showExport(selectedApp());
 });
 
 form.addEventListener("keydown", (event) => {
@@ -290,5 +308,38 @@ function renderSource(text, citations) {
   return frag;
 }
 
+async function showExport(app) {
+  const link = EXPORT_LINKS[app];
+  if (!link) {
+    artifact.textContent = "This page builds a file for the sample bill or the sample lease. A pasted document stays on this machine and is not written into that file.";
+    return;
+  }
+  artifactDownload.href = link.href;
+  artifactDownload.textContent = link.label;
+  try {
+    const response = await fetch("/api/export?app=" + app);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "The file was not built.");
+    artifact.textContent = payload.markdown;
+  } catch (error) {
+    artifact.textContent = error.message;
+  }
+}
+
+async function runJudge() {
+  const input = document.querySelector('input[name="app"][value="eob"]');
+  input.checked = true;
+  pasteField.hidden = true;
+  questionBox.value = "What is the patient responsibility?";
+  answerBox.value = "The patient responsibility is $42.15. The pharmacy charge is $180.00.";
+  await loadDocument();
+  await ask();
+  await showExport("eob");
+}
+
 renderPresets();
-loadDocument();
+if (new URLSearchParams(window.location.search).get("judge") === "1") {
+  runJudge();
+} else {
+  loadDocument();
+}

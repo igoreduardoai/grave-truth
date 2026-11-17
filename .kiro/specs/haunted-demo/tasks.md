@@ -38,3 +38,9 @@
 - [x] 8. Document the one-command judge quickstart
   - README section `Judge quickstart` names `python3 demos/haunted/server.py`.
   - _Requirements: 2.1, 2.7_
+
+- [x] 9. Fill the workflow file from `?judge=1`
+  - Opening that query checks the synthetic bill and requests `GET /api/export`.
+  - `GET /health` is static. `scripts/build_static.py` writes `site/` and does not deploy it.
+  - Covered by `tests/test_judge_mode.py` and `tests/test_static_site.py`.
+  - _Requirements: 4.1, 4.2, 4.3_
