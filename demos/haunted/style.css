@@ -37,12 +37,46 @@ body {
   top: 0.6rem;
 }
 
-.top, main, footer {
+.hero, main, footer {
   width: min(1120px, calc(100% - 2rem));
   margin-inline: auto;
 }
 
-.top { padding: 2.2rem 0 0.4rem; }
+.hero { padding: 2.2rem 0 0.4rem; }
+
+.storyboard {
+  margin: 0.8rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.storyboard li { margin: 0.35rem 0; }
+
+.step {
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 600;
+}
+
+.artifact-download {
+  display: inline-block;
+  margin: 0.2rem 0.6rem 0.8rem 0;
+  background: var(--gold);
+  color: var(--gold-ink);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+}
+
+#artifact {
+  white-space: pre-wrap;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  overflow-x: auto;
+}
 
 .eyebrow, .doc-id, footer, .status, label, legend, button, .hint, .badge, .ghost-reason {
   font-family: "Avenir Next", "Segoe UI", sans-serif;

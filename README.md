@@ -27,11 +27,31 @@ One command, from the repo root. No API key and no network:
 python3 demos/haunted/server.py
 ```
 
-Open the `http://127.0.0.1:8765/` URL the process prints. Pick the sample EOB or the sample lease, or paste a synthetic document. Type a question, a proposed answer, or both, then choose **Check grounding**. Examples under the form fill both and run the check.
+Open the `http://127.0.0.1:8765/` URL the process prints. Add `?judge=1` to that URL to check the synthetic bill and fill the dispute letter with no second click and no API key. `GET /health` on the same process returns static JSON. The live model path is unimplemented.
+
+Pick the sample EOB or the sample lease, or paste a synthetic document. Type a question, a proposed answer, or both, then choose **Check grounding**. **Build the workflow file** writes a markdown dispute letter or a clause list. Each cited claim in that file includes the span offsets. A claim the checker does not support says not found. Examples under the form fill both and run the check.
+
+`python3 scripts/build_static.py` writes `site/`, including `judge.html` and the two markdown files. That command does not deploy anything. `python3 -m http.server` from `site/` would only serve those files. It would not answer a new question.
 
 Cited claims stay on the page, with a Cited badge, and the source clause is marked in gold. Claims with no supporting clause are ghosts: the sentence fades and a Ghost badge stays. The page posts to that local process, which calls `DocumentAgent` in `src/grave_truth`. It does not reimplement the checker and it does not send the document anywhere.
 
 `python3 -m http.server` only serves the static files. It does not answer questions.
+
+## Before and after
+
+Measured by the tests named in the last column. The checker’s abstention on the 17 not-found gold cases was already the behavior on the parent of this change. The new row is the comparison against quoting the first sentence of the fixture.
+
+| Behavior | Before this change | After this change | Test |
+|---|---|---|---|
+| Opening the page runs the sample | The form waits for **Check grounding** | `?judge=1` checks the synthetic bill and fills the letter with no second click | `tests/test_judge_mode.py` |
+| End of the demo | A verdict on the page | A markdown dispute letter or clause list. Each cited span slices the document. Other claims say not found | `tests/test_export_artifact.py` |
+| `GET /health` | Not a route (HTTP 404) | Static JSON. `live_model` is `unimplemented` | `tests/test_judge_mode.py` |
+| On-save eval hook | Gold suite | Gold suite and the held-out snapshot. The hook does not edit the holdout files | `tests/test_kiro_loadbearing.py` |
+| Editor file access | The fixtures are ordinary files | A keyless MCP server returns the two synthetic fixtures and 0 bytes for any other name | `tests/test_fixture_mcp.py` |
+| Not-found gold cases | Quoting the first sentence of the fixture would cite 17 of 17 | The checker cites 0 of 17 | `tests/test_capability_contrast.py` |
+| Default workflow claims | Copying the claims attaches 0 spans | The two sample files together attach 4 spans | `tests/test_capability_contrast.py` |
+
+The Kiro files under `.kiro/` are specs, steering, hooks, and a keyless MCP config. This run did not record a Kiro IDE session. The with/without numbers above are pytest measurements, not a recording of the IDE. The evaluator and critic in `validation/adjudication` remain scripted simulations, not independent judgment. No paid model was called.
 
 ## How to run
 
@@ -110,11 +130,12 @@ Specs (requirements, design, tasks):
 - `.kiro/specs/citation-grounding/` — spans, abstention, rejection
 - `.kiro/specs/demo-apps/` — the two app folders and the CLI
 - `.kiro/specs/haunted-demo/` — the local page: paste or pick a document, cited claims and ghosts
+- `.kiro/specs/workflow-artifact/` — the downloadable dispute letter and clause list, `?judge=1`, and `GET /health`
 - `.kiro/specs/pre-submission-validation/` — local checks around that page. Not a third application.
 
 Steering in `.kiro/steering/`:
 
-- `no-invention.md`, `product.md`, `tech.md`, `structure.md` load always
+- `no-invention.md`, `cite-or-abstain.md`, `product.md`, `tech.md`, `structure.md` load always
 - `testing-gold-cases.md` and `fixture-safety.md` load by file match
 - `add-gold-case.md` loads automatically when eval work is in context
 - `demo-walkthrough.md` is manual (`#demo-walkthrough`)
@@ -128,8 +149,11 @@ Hooks in `.kiro/hooks/`:
 - `grounding-reminder.json` — v1 agent prompt after `skeleton.py` changes
 - `block-secret-files.json` — v1 `PreToolUse` command that exits 2 for `.env`, key, and `secrets/` paths (`scripts/kiro_guard_no_secrets.py`)
 - `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough and the web demo tests before claiming the demo works
+- `gold-holdout-on-save.json` — v1 command hook that runs `python3 evals/run_gold_and_holdout.py` (gold suite, then the held-out snapshot). It does not edit the holdout files.
 
-Run the hook command locally with `python3 evals/run_evals.py`. The demo check is `python3 scripts/demo_walkthrough.py`.
+`.kiro/settings/mcp.json` starts `scripts/fixture_mcp.py`. That process reads two synthetic fixtures and returns no bytes for any other name. It does not use an API key.
+
+Run the gold hook locally with `python3 evals/run_evals.py`. Run gold and the holdout comparison with `python3 evals/run_gold_and_holdout.py`. The demo check is `python3 scripts/demo_walkthrough.py`. This run did not record a Kiro IDE session.
 
 ## Eval results
 
@@ -143,10 +167,11 @@ Gold cases live in `evals/gold_cases.json`.
 | accept_grounded | 22 |
 | **Total** | **90** |
 
-Measured on this working tree on 2026-11-09. Commands and exits:
+Measured on this working tree on 2026-11-17, except the `python3 -m validation run` line, which is the 2026-11-09 laboratory run and was not repeated:
 
 - `python3 evals/run_evals.py` → exit 0, **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22).
-- `python3 -m pytest -q` → exit 0, **74 passed**, 0 failed.
+- `python3 -m pytest -q` → exit 0, **96 passed**, 0 failed.
+- `python3 scripts/capture_gallery.py` → 8 Playwright screenshots in `gallery/`. axe-core violations **0** and incomplete **0** on each of those 8 pages (`gallery/axe-report.json`).
 - `python3 -m validation.adjudication` → exit 0, **8/8** scripted scenarios. The repair scenario sets `focusable` true and the retest passes. These reviewers are scripted simulations, not independent judges. Live evaluator/critic was not validated.
 - `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes.
 - `evals/holdout_cases.json` was not edited. The remeasurement in `evals/holdout_observed.json` is **7/7** intended checks met. The two rows that previously quoted a negated sentence and a `USD` amount now return `not found`. The new regressions are different documents in `evals/adversarial_cases.json` (a copay that is never `$15.00`, a locker deposit that is not collected, a lab fee listed without a price, and `EUR 18` beside a deductible).

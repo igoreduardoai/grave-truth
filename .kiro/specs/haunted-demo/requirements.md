@@ -40,3 +40,13 @@ The haunted demo shows the same citation rule as the two apps. An uncited claim 
 1. WHEN `python3 scripts/demo_walkthrough.py` runs THEN it SHALL print a block for every gold case in both apps.
 2. WHEN every gold case passes THEN the script SHALL exit 0.
 3. The script SHALL NOT call a network API.
+
+### Requirement 4: One-URL sample and a downloadable file
+
+**User Story:** As a reviewer without an API key, I want the synthetic bill checked when I open the page, so that the letter is visible without a second click.
+
+#### Acceptance Criteria
+
+1. WHEN the URL query is `judge=1` THEN the page SHALL check the synthetic bill and SHALL fill the workflow file.
+2. WHEN the reviewer downloads the file THEN each cited claim SHALL include a span that slices the document, and each unsupported claim SHALL say not found.
+3. `GET /health` SHALL return static JSON and SHALL NOT call a model.
