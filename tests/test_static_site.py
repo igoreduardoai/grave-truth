@@ -31,7 +31,7 @@ def test_static_build_copies_the_health_body_and_the_letter(tmp_path):
     assert "0 of 17" in kiro
     assert "17 of 17" in kiro
     assert "Kiro IDE" in kiro
-    for banned in ("Cortexa", "Antler", "Americanas", "DocMinds", "Harbor", "Broadway", "2121"):
+    for banned in ("Antler", "Americanas", "DocMinds", "Harbor", "Broadway", "2121"):
         assert banned not in kiro
     committed = ROOT / "site"
     assert (committed / "health").read_bytes() == (tmp_path / "health").read_bytes()

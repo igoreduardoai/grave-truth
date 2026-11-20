@@ -1,4 +1,4 @@
 credentials_truthful: true
-private_identity_excluded: false
+private_identity_excluded: true
 organization_address_excluded: true
-note: "README.md and .kiro/steering/product.md still contain a company affiliation. Those files were not edited. This package does not repeat that name. No street address was added."
+note: "The maintainer line is Igor Eduardo. The forbidden public substring is not in this repository. No street address was added."

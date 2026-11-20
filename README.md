@@ -195,6 +195,6 @@ The contradictory billed-amount case still cites both original spans and sets `c
 
 ## License
 
-MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler. Cortexa Social Inc.
+MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler.
 
 Upstream licenses for the validation tooling are in `THIRD_PARTY_NOTICES.md`. The validation stack is test tooling, not a third application.

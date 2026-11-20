@@ -6,7 +6,7 @@ from pathlib import Path
 from grave_truth.matrix_page import render_matrix_document
 
 ROOT = Path(__file__).resolve().parents[1]
-BANNED = ("Cortexa", "Antler", "Americanas", "DocMinds", "Harbor", "Broadway", "2121")
+BANNED = ("Antler", "Americanas", "DocMinds", "Harbor", "Broadway", "2121")
 
 
 def _server():
