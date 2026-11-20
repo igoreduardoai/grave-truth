@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from grave_truth.apps import eob, lease  # noqa: E402
 from grave_truth.artifact import build_artifact  # noqa: E402
 from grave_truth.health import HEALTH_BODY  # noqa: E402
+from grave_truth.matrix_page import render_matrix_document  # noqa: E402
 from grave_truth.skeleton import DocumentAgent  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -256,6 +257,10 @@ def route(method: str, path: str, body: bytes) -> tuple[int, str, bytes]:
     clean = path.split("?", 1)[0]
     if method == "GET" and clean == "/health":
         return 200, "application/json; charset=utf-8", HEALTH_BODY
+    if method == "GET" and clean in {"/kiro", "/kiro.html"}:
+        markdown = (ROOT / "docs" / "KIRO-CAPABILITY-MATRIX.md").read_text(encoding="utf-8")
+        page = render_matrix_document(markdown).encode("utf-8")
+        return 200, "text/html; charset=utf-8", page
     if method == "GET" and clean == "/api/export":
         app = _query(path).get("app", "")
         try:

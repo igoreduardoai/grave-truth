@@ -1,0 +1,4 @@
+opens_with: product
+hero_scene_start_sec: 0.1
+impact_visible_by_sec: 6.1
+note: "demo/timing.txt from scripts/record_demo.py on 2026-11-20. The hero was visible at 0.1s and the dispute letter at 6.1s. The file has no narration and is not a public video."

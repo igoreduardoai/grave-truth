@@ -1,0 +1,2 @@
+hero_visible_sec 0.1
+letter_visible_sec 6.1

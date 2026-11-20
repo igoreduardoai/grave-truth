@@ -1,0 +1,8 @@
+url: ""
+status:
+anonymous: false
+monitor:
+  workflow: ""
+  cron: ""
+  until_judging_ends: false
+note: "GET /health is static JSON from the local server and from site/health. live_model is unimplemented. There is no Vercel or Hugging Face URL. .github/workflows/pages.yml is workflow_dispatch only and was not run. It is not a /health cron."

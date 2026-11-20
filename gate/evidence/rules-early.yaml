@@ -1,0 +1,7 @@
+official_rules_url: https://kiroween.devpost.com/rules
+read_on: "2026-11-17"
+timezone: America/Chicago
+eligibility_notes: "The overview page listed country and territory exclusions. The rules check does not restate that list and does not give eligibility advice."
+visibility_required: "The repository must be public and include an open source license file."
+source_checked: official
+note: "Quotes were retrieved 2026-11-17 into docs/KIROWEEN-RULES-CHECK.md. This file does not prove the rules were read before the first commit."

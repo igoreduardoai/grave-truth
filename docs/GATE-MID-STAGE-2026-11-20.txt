@@ -1,0 +1,56 @@
+# winner-gap gate — Grave Truth — stage mid
+spec: winner-gap-2026-11-09
+event: Kiroween 2026
+
+## Blocking
+- [PASS] B1-storyboard: Hero screen shows input, transformation, and result
+  Hero storyboard names the input, the transformation, and the result.
+  evidence: evidence/hero-storyboard.yaml
+- [FAIL] B1-five-second: One person names the product from the hero screen with no narration
+  evidence/five-second.yaml: unaided must be true; what_they_said is missing; witness_role is missing; date is missing.
+  evidence: evidence/five-second.yaml
+- [PASS] B2-final-action: Final output is a usable action or artifact, not a ranking
+  Final action is file_artifact: The demo writes a markdown dispute letter whose cited claims carry span offsets.
+  evidence: evidence/final-action.yaml
+- [PASS] B3-sponsor-depth: At least three sponsor capabilities on the critical path, with a with/without comparison
+  4 critical-path capabilities; not-found gold cases cited: without 17, with 0.
+  evidence: evidence/sponsor-matrix.yaml
+- [PASS] B4-not-obvious: Idea is not the use case the sponsor already advertises, or the unexpected angle is written down
+  Sponsor page checked; the use case is not one they already advertise.
+  evidence: evidence/not-obvious.yaml
+- [PASS] B4-vertical: One named role, one task, one current workaround
+  Vertical user: Person reading a synthetic fixture; task and current workaround are written down.
+  evidence: evidence/vertical.yaml
+- [FAIL] B5-demo-health: Stable demo URL and a /health monitor; anonymous 200 at submission
+  evidence/demo-health.yaml: url must be https.
+  evidence: evidence/demo-health.yaml
+- [PASS] B6-rules-early: Eligibility, rules, and visibility read from the official source, in CST
+  Official rules read on 2026-11-17 (America/Chicago).
+  evidence: evidence/rules-early.yaml
+
+## Advisory
+- [FAIL] R-alternatives: Three alternative ideas and the reason this one was chosen
+  evidence/alternatives.yaml: need 3 alternatives; found 0.
+  evidence: evidence/alternatives.yaml
+- [FAIL] R-teammate: A teammate was sought at kickoff; nothing was posted without the owner's OK
+  evidence/teammate.yaml: sought_at_kickoff is not true.
+  evidence: evidence/teammate.yaml
+- [FAIL] R-iteration: Iteration log against a real signal, not a scripted judge
+  evidence/iteration-log.yaml: 0 real-signal round(s) and 1 scripted. Need at least 3 rounds against a real signal. Scripted judges are simulations, not proof.
+  evidence: evidence/iteration-log.yaml
+- [FAIL] R-validation: Recorded pytest, Playwright, axe, Lighthouse, and untouched gold/holdout
+  evidence/validation.yaml: lighthouse_hero is None, need >= 90. These are recorded claims; this command does not re-run the suites.
+  evidence: evidence/validation.yaml
+
+Blocking failed: B1-five-second, B5-demo-health
+Advisory: 0/4 (0.00); target >= 0.70
+Verdict: FAIL
+
+## Warnings
+- ADVISORY_BELOW_TARGET: advisory 0/4 (0.00) is below 0.70.
+
+## Limits
+- A checked box is not evidence. Missing evidence fails the item.
+- Scripted judges are simulations, not proof. This command never calls a model.
+- Without --probe, a health status is a recorded claim, not a live check.
+- Screenshot files are counted, not visually verified.

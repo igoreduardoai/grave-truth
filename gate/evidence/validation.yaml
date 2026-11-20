@@ -1,0 +1,7 @@
+pytest: pass
+playwright_e2e: pass
+axe_violations: 0
+lighthouse_hero:
+gold_untouched: true
+holdout_untouched: true
+note: "Measured 2026-11-20. python3 -m pytest -q --color=no reported 104 passed. python3 scripts/capture_gallery.py reported violations 0 across 8 pages and incomplete 0. Lighthouse was not re-run. An older laboratory figure was not copied. Gold and holdout files were not edited."

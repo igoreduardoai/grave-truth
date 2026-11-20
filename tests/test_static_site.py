@@ -26,7 +26,16 @@ def test_static_build_copies_the_health_body_and_the_letter(tmp_path):
     assert "api_key" not in judge
     page = (tmp_path / "index.html").read_text(encoding="utf-8")
     assert 'id="hero"' in page
+    assert 'href="kiro.html"' in page
+    kiro = (tmp_path / "kiro.html").read_text(encoding="utf-8")
+    assert "0 of 17" in kiro
+    assert "17 of 17" in kiro
+    assert "Kiro IDE" in kiro
+    for banned in ("Cortexa", "Antler", "Americanas", "DocMinds", "Harbor", "Broadway", "2121"):
+        assert banned not in kiro
     committed = ROOT / "site"
     assert (committed / "health").read_bytes() == (tmp_path / "health").read_bytes()
     assert (committed / "judge.html").read_text(encoding="utf-8") == judge
     assert (committed / "grave-truth-dispute-letter.md").read_text(encoding="utf-8") == letter
+    assert (committed / "kiro.html").read_text(encoding="utf-8") == kiro
+    assert (committed / "index.html").read_text(encoding="utf-8") == page

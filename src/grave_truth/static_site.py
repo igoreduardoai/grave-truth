@@ -7,6 +7,7 @@ from pathlib import Path
 
 from grave_truth.artifact import build_artifact
 from grave_truth.health import HEALTH_BODY
+from grave_truth.matrix_page import render_matrix_document
 
 _HAUNTED = Path(__file__).resolve().parents[2] / "demos" / "haunted"
 _ASSETS = ("index.html", "app.js", "style.css")
@@ -24,6 +25,11 @@ def build(dest: Path) -> None:
     (dest / letter["filename"]).write_text(letter["markdown"], encoding="utf-8")
     (dest / clauses["filename"]).write_text(clauses["markdown"], encoding="utf-8")
     (dest / "judge.html").write_text(_judge_page(letter["markdown"]), encoding="utf-8")
+    matrix = Path(__file__).resolve().parents[2] / "docs" / "KIRO-CAPABILITY-MATRIX.md"
+    (dest / "kiro.html").write_text(
+        render_matrix_document(matrix.read_text(encoding="utf-8")),
+        encoding="utf-8",
+    )
 
 
 def _judge_page(markdown: str) -> str:
