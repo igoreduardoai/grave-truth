@@ -5,3 +5,4 @@
 - Script: `demo/narration-lines.json`, one entry per scene: judge link with disclosure, cited vs ghost on the synthetic EOB, lease late-fee swap, workflow file, Kiro capability matrix, /health.
 - The silent `raw-walkthrough.webm` is kept unchanged.
 - Not uploaded to a public video host yet.
+- v2 (2026-11-21, after commit 36210c2): re-rendered so the page shows the hosted-demo wording instead of "local only"; disclosure banner moved to the bottom. Same script, 121.9s. v1 is kept outside the repo.
