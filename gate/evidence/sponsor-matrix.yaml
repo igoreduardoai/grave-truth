@@ -1,0 +1,21 @@
+sponsor: Kiro
+flagship: specs
+capabilities:
+  - name: "Steering: cite or abstain"
+    on_critical_path: true
+    flagship: false
+  - name: specs
+    on_critical_path: true
+    flagship: true
+  - name: hook
+    on_critical_path: true
+    flagship: false
+  - name: "MCP keyless fixture reader"
+    on_critical_path: true
+    flagship: false
+comparison:
+  plan: "Count not-found gold cases that receive a citation, once with the cite-or-abstain checker and once by quoting the first sentence of the fixture."
+  metric: "not-found gold cases cited"
+  without: 17
+  with: 0
+  source: "tests/test_capability_contrast.py. This is a pytest contrast, not a Kiro IDE trace. Flagship marks the specs files the rules page requires the repository to show."

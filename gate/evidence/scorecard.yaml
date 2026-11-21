@@ -1,0 +1,10 @@
+tested:
+  - name: not-found gold cases cited by the checker
+    value: "0 of 17"
+  - name: not-found gold cases cited by quoting the first sentence
+    value: "17 of 17"
+failed:
+  - name: stable demo host
+    detail: "No Vercel or Hugging Face URL is recorded. GET /health exists on the local server and in site/health."
+  - name: five-second viewer
+    detail: "No person is recorded describing the hero screen."

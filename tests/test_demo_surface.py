@@ -105,8 +105,9 @@ def test_readme_counts_match_gold_cases_and_stay_honest():
     assert "synthetic" in readme.lower()
     assert "not a medical device" in readme
     assert "not legal advice" in readme
-    for banned in ("Americanas", "DocMinds", "44 months"):
+    for banned in ("Americanas", "DocMinds", "44 months", "Social Inc"):
         assert banned not in readme
+    assert "Igor Eduardo, Founder in Residence at Antler." in readme
 
 
 def test_walkthrough_hook_and_steering_exist():

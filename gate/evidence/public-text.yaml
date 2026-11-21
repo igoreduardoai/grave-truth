@@ -1,0 +1,4 @@
+credentials_truthful: true
+private_identity_excluded: true
+organization_address_excluded: true
+note: "The maintainer line is Igor Eduardo. The forbidden public substring is not in this repository. No street address was added."

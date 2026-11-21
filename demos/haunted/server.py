@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -24,6 +25,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from grave_truth.apps import eob, lease  # noqa: E402
 from grave_truth.artifact import build_artifact  # noqa: E402
 from grave_truth.health import HEALTH_BODY  # noqa: E402
+from grave_truth.matrix_page import render_matrix_document  # noqa: E402
 from grave_truth.skeleton import DocumentAgent  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -46,6 +48,43 @@ CONTENT_TYPES = {
     "app.js": "text/javascript; charset=utf-8",
     "style.css": "text/css; charset=utf-8",
 }
+# Copy that is only true on 127.0.0.1. A hosted deployment (Vercel sets VERCEL=1,
+# or GRAVE_TRUTH_HOSTED=1) gets accurate wording instead. Local runs are unchanged.
+HOSTED_NOTICE = (
+    "Hosted demo: pasted text is processed on the server and not stored. "
+    "Run locally for fully offline use."
+)
+HOSTED_COPY = {
+    "index.html": (
+        ("Kiroween 2026 · Skeleton Crew · local only", "Kiroween 2026 · Skeleton Crew · hosted demo"),
+        ("Nothing is sent off this machine.", HOSTED_NOTICE),
+        ("The page calls the local Python library.", "The page calls the same Python library on the demo server."),
+    ),
+    "app.js": (
+        ("A pasted document stays on this machine and is not written into that file.",
+         "A pasted document is processed on the demo server, is not stored, and is not written into that file."),
+        ("Checking with the local library…", "Checking with the library on the demo server…"),
+        ("The local server rejected the request.", "The demo server rejected the request."),
+    ),
+}
+
+
+def is_hosted() -> bool:
+    return os.environ.get("VERCEL") == "1" or os.environ.get("GRAVE_TRUTH_HOSTED") == "1"
+
+
+def static_bytes(name: str, hosted: bool | None = None) -> bytes:
+    data = (HERE / name).read_bytes()
+    if not (is_hosted() if hosted is None else hosted):
+        return data
+    text = data.decode("utf-8")
+    for old, new in HOSTED_COPY.get(name, ()):
+        if old not in text:
+            raise RuntimeError(f"hosted copy anchor missing in {name}: {old!r}")
+        text = text.replace(old, new)
+    return text.encode("utf-8")
+
+
 APP_LABELS = {
     "eob": "eob-explainer",
     "lease": "lease-checker",
@@ -256,6 +295,10 @@ def route(method: str, path: str, body: bytes) -> tuple[int, str, bytes]:
     clean = path.split("?", 1)[0]
     if method == "GET" and clean == "/health":
         return 200, "application/json; charset=utf-8", HEALTH_BODY
+    if method == "GET" and clean in {"/kiro", "/kiro.html"}:
+        markdown = (ROOT / "docs" / "KIRO-CAPABILITY-MATRIX.md").read_text(encoding="utf-8")
+        page = render_matrix_document(markdown).encode("utf-8")
+        return 200, "text/html; charset=utf-8", page
     if method == "GET" and clean == "/api/export":
         app = _query(path).get("app", "")
         try:
@@ -267,7 +310,7 @@ def route(method: str, path: str, body: bytes) -> tuple[int, str, bytes]:
         return _json(200, artifact)
     if method == "GET" and clean in STATIC:
         name = STATIC[clean]
-        data = (HERE / name).read_bytes()
+        data = static_bytes(name)
         return 200, CONTENT_TYPES[name], data
     if method == "GET" and clean == "/api/document":
         query = _query(path)

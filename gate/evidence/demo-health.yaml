@@ -1,0 +1,8 @@
+url: "https://grave-truth.vercel.app/health"
+status: 200
+anonymous: true
+monitor:
+  workflow: ".github/workflows/health.yml"
+  cron: "17 */6 * * *"
+  until_judging_ends: false
+note: "Deployed 2026-11-21 to Vercel Hobby (free) from PR #9 head 2aa041f; see deploy/vercel/README.md. curl without cookies returned 200 for /, /health, /?judge=1, /kiro and /api/export on 2026-11-21 (CST). The scheduled probe only runs once health.yml is on main; until_judging_ends stays false until then. live_model is unimplemented."

@@ -255,6 +255,28 @@ mark.clause {
 
 footer { padding-bottom: 2.5rem; }
 
+.matrix {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.matrix table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.matrix th,
+.matrix td {
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.5rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.matrix th { color: var(--gold); }
+
 code {
   font-family: "SFMono-Regular", ui-monospace, monospace;
   font-size: 0.86em;

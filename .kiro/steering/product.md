@@ -17,4 +17,4 @@ People using the demos are reading a fixture, not their own bill or lease. The p
 
 ## Who maintains it
 
-Igor Eduardo, Founder in Residence at Antler. Cortexa Social Inc is the company affiliation for this project. Do not invent titles, credentials, or case history.
+Igor Eduardo, Founder in Residence at Antler. Do not invent titles, credentials, or case history.

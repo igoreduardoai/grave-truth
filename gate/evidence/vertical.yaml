@@ -1,0 +1,5 @@
+person_role: "Person reading a synthetic fixture"
+task: "Read one explanation of benefits, or one lease clause, and see which line supports a claim."
+workaround: "Scan the page for the figure and decide by eye whether the words next to it are the right subject."
+horizontal_tool: false
+source: "README.md states the task and the eye-scan workaround. The product steering says people using the demos are reading a fixture, not their own bill or lease. No named person was interviewed."
