@@ -6,12 +6,12 @@ Boxes are a mirror for the human. The gate reads `evidence/`. A checked box is n
 
 - [x] B1-storyboard
 - [ ] B1-five-second
-- [ ] B1-video-impact-20s
+- [x] B1-video-impact-20s
 - [x] B2-final-action
 - [x] B3-sponsor-depth
 - [x] B4-not-obvious
 - [x] B4-vertical
-- [ ] B5-demo-health
+- [x] B5-demo-health
 - [x] B6-rules-early
 - [ ] B6-rules-submit
 - [x] B-public-text

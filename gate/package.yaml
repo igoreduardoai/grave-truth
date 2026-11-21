@@ -1,8 +1,8 @@
 project: Grave Truth
 event: Kiroween 2026
 links:
-  demo_url: ""
-  health_url: ""
+  demo_url: https://grave-truth.vercel.app/?judge=1
+  health_url: https://grave-truth.vercel.app/health
   repo_url: https://github.com/igoreduardoai/grave-truth
   video_url: ""
   rules_url: https://kiroween.devpost.com/rules

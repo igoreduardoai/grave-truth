@@ -1,4 +1,4 @@
 opens_with: product
-hero_scene_start_sec: 0.1
-impact_visible_by_sec: 6.1
-note: "demo/timing.txt from scripts/record_demo.py on 2026-11-20. The hero was visible at 0.1s and the dispute letter at 6.1s. The file has no narration and is not a public video."
+hero_scene_start_sec: 0.5
+impact_visible_by_sec: 16.4
+note: "Narrated demo recorded 2026-11-21 against https://grave-truth.vercel.app/?judge=1 (Playwright). The product hero is on screen at 0.5s with a disclosure banner 'Narration: synthetic voice' for the first 10s; the cited/ghost result panel is scrolled into view at 16.4s. Narration is a synthetic voice (edge-tts en-US-GuyNeural), disclosed on screen for the whole video. 121.9s. Not uploaded publicly yet; file kept outside the repo."

@@ -1,8 +1,8 @@
-url: ""
-status:
-anonymous: false
+url: "https://grave-truth.vercel.app/health"
+status: 200
+anonymous: true
 monitor:
-  workflow: ""
-  cron: ""
+  workflow: ".github/workflows/health.yml"
+  cron: "17 */6 * * *"
   until_judging_ends: false
-note: "GET /health is static JSON from the local server and from site/health. live_model is unimplemented. There is no Vercel or Hugging Face URL. .github/workflows/pages.yml is workflow_dispatch only and was not run. It is not a /health cron."
+note: "Deployed 2026-11-21 to Vercel Hobby (free) from PR #9 head 2aa041f; see deploy/vercel/README.md. curl without cookies returned 200 for /, /health, /?judge=1, /kiro and /api/export on 2026-11-21 (CST). The scheduled probe only runs once health.yml is on main; until_judging_ends stays false until then. live_model is unimplemented."
