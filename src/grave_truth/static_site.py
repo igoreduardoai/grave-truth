@@ -10,7 +10,7 @@ from grave_truth.health import HEALTH_BODY
 from grave_truth.matrix_page import render_matrix_document
 
 _HAUNTED = Path(__file__).resolve().parents[2] / "demos" / "haunted"
-_ASSETS = ("index.html", "app.js", "style.css")
+_ASSETS = ("index.html", "app.js", "style.css", "inter.woff2")
 
 
 def build(dest: Path) -> None:

@@ -165,7 +165,7 @@ async function loadDocument() {
   }
 }
 
-async function ask() {
+async function ask(options = {}) {
   const app = selectedApp();
   const body = {
     app,
@@ -187,7 +187,7 @@ async function ask() {
     if (!response.ok) throw new Error(payload.error || "The local server rejected the request.");
     renderResult(payload);
     status.textContent = "";
-    verdict.focus();
+    if (options.focus !== false) verdict.focus();
   } catch (error) {
     verdict.className = "verdict";
     verdict.textContent = error.message;
@@ -203,7 +203,7 @@ async function ask() {
       source.textContent = pasted || "Paste a synthetic document, then check it.";
     }
     status.textContent = "No answer was invented.";
-    verdict.focus();
+    if (options.focus !== false) verdict.focus();
   }
 }
 
@@ -315,7 +315,7 @@ async function showExport(app) {
     return;
   }
   artifactDownload.href = link.href;
-  artifactDownload.textContent = link.label;
+  artifactDownload.lastChild.textContent = link.label;
   try {
     const response = await fetch("/api/export?app=" + app);
     const payload = await response.json();
@@ -341,5 +341,6 @@ renderPresets();
 if (new URLSearchParams(window.location.search).get("judge") === "1") {
   runJudge();
 } else {
-  loadDocument();
+  // Result first: the default question is answered on load, without moving focus.
+  loadDocument().then(() => ask({ focus: false }));
 }

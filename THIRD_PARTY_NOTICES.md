@@ -52,3 +52,7 @@ axe-core's MPL-2.0 copyleft applies to axe-core's own files. Those files are not
 The contradiction behavior in `src/grave_truth/skeleton.py` is new project code. It does not copy another repository. No additional third-party package was added for it.
 
 `validation/seeds/` stores research notes supplied on 2026-11-08. They are cited inputs for the adjudication loop. They are not third-party source code, not a rubric, and not instructions the loop executes.
+
+## Inter (font)
+
+`demos/haunted/inter.woff2` is the Latin variable subset of Inter by Rasmus Andersson, from the `@fontsource-variable/inter` package. License: SIL Open Font License 1.1 (https://openfontlicense.org).

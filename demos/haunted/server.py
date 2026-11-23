@@ -42,11 +42,13 @@ STATIC = {
     "/index.html": "index.html",
     "/app.js": "app.js",
     "/style.css": "style.css",
+    "/inter.woff2": "inter.woff2",
 }
 CONTENT_TYPES = {
     "index.html": "text/html; charset=utf-8",
     "app.js": "text/javascript; charset=utf-8",
     "style.css": "text/css; charset=utf-8",
+    "inter.woff2": "font/woff2",
 }
 # Copy that is only true on 127.0.0.1. A hosted deployment (Vercel sets VERCEL=1,
 # or GRAVE_TRUTH_HOSTED=1) gets accurate wording instead. Local runs are unchanged.
@@ -75,7 +77,7 @@ def is_hosted() -> bool:
 
 def static_bytes(name: str, hosted: bool | None = None) -> bytes:
     data = (HERE / name).read_bytes()
-    if not (is_hosted() if hosted is None else hosted):
+    if not (is_hosted() if hosted is None else hosted) or name not in HOSTED_COPY:
         return data
     text = data.decode("utf-8")
     for old, new in HOSTED_COPY.get(name, ()):
