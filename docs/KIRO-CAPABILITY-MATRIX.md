@@ -21,4 +21,4 @@ The 0-of-17 and 17-of-17 counts are the with/without number for the cite-or-abst
 
 - The code was not shown to have been authored inside the Kiro IDE. The `.kiro/` files are load-bearing for the tests above. That is the evidence.
 - No paid model or provider was called.
-- The static build in `site/` was not deployed.
+- A hosted no-login demo of the static/server page is at https://grave-truth.vercel.app. This inventory still does not record a Kiro IDE session.

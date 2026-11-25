@@ -1,5 +1,8 @@
 # Kiroween 2026 rules check
 
+Update 2026-11-25 (America/Chicago): official rules at https://kiroween.devpost.com/rules were reread. The 16 November 2026 Australia update is unchanged. Submission still closes 4 December 2026 at 2:00 pm Pacific Time (4:00 pm America/Chicago the same day). A hosted no-login demo is at https://grave-truth.vercel.app (judge mode: `?judge=1`). A walkthrough video under three minutes is at https://youtu.be/N4m-68hVEzw (YouTube, currently unlisted). LICENSE and `/.kiro` remain on the default branch and are not gitignored.
+
+
 Retrieved 2026-11-17 from [https://kiroween.devpost.com/rules](https://kiroween.devpost.com/rules). The overview page [https://kiroween.devpost.com/](https://kiroween.devpost.com/) was retrieved the same day. Quotes below are the extractor’s text. Where the extractor joined sentences or collapsed whitespace, that is the text that was returned. Street-address lines on the rules page are omitted from this file.
 
 The rules page opens with: "Updated November 16, 2026, to include residents of Australia."

@@ -19,6 +19,12 @@ The library is `src/grave_truth`. The folders above are the two apps. They do no
 
 This is a research demo. It is not a medical device and not legal advice. Documents in `fixtures/` are synthetic. There is no real PHI and no real lease.
 
+## Hosted demo
+
+A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON (`mode` is `offline`; the live model path is unimplemented). The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
+
+A walkthrough video (under three minutes, YouTube, currently unlisted) is at [https://youtu.be/N4m-68hVEzw](https://youtu.be/N4m-68hVEzw).
+
 ## Judge quickstart
 
 One command, from the repo root. No API key and no network:
@@ -190,7 +196,7 @@ The contradictory billed-amount case still cites both original spans and sets `c
 - Citations are sentences. A sentence that contains two dates is quoted whole.
 - The agent quotes the file. It does not know whether the file is true outside that file.
 - One synthetic document per app. No insurer, clinic, or landlord has used this software. There is no measured demand, efficacy, or field comparison.
-- Sponsor rules, eligibility, and a human review of the demo are not automatically verified. The decision stays `insufficient-evidence` until those are recorded. No Kiro IDE recording and no demo video are in this run.
+- Sponsor rules, eligibility, and a human review of the demo are not automatically verified by the local validation stack. A walkthrough video exists at [https://youtu.be/N4m-68hVEzw](https://youtu.be/N4m-68hVEzw). This run did not record a Kiro IDE session.
 - Same numeric value with different `$` / comma formatting counts as one number. A different value is rejected even if it appears next to another subject.
 
 ## License
