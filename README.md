@@ -15,6 +15,12 @@ The library is `src/grave_truth`. The folders above are the two apps. They do no
 
 This is a research demo. It is not a medical device and not legal advice. Documents in `fixtures/` are synthetic. There is no real PHI and no real lease.
 
+## Hosted demo
+
+A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON. The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
+
+The hosted page was built from later open pull requests that have not been merged into this default branch.
+
 ## How to run
 
 Python 3.11 or newer. From the repo root:
@@ -134,4 +140,4 @@ The gold-case table matches `evals/gold_cases.json`. Counts above are from the l
 
 ## License
 
-MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler. Cortexa Social Inc.
+MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler.
