@@ -21,6 +21,7 @@ This is a research demo. It is not a medical device and not legal advice. Docume
 
 ## Hosted demo
 
+<<<<<<< HEAD
 A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON (`mode` is `offline`; the live model path is unimplemented). The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
 
 A walkthrough video (under three minutes, YouTube, currently unlisted) is at [https://youtu.be/N4m-68hVEzw](https://youtu.be/N4m-68hVEzw).
@@ -58,6 +59,11 @@ Measured by the tests named in the last column. The checker’s abstention on th
 | Default workflow claims | Copying the claims attaches 0 spans | The two sample files together attach 4 spans | `tests/test_capability_contrast.py` |
 
 The Kiro files under `.kiro/` are specs, steering, hooks, and a keyless MCP config. This run did not record a Kiro IDE session. The with/without numbers above are pytest measurements, not a recording of the IDE. The evaluator and critic in `validation/adjudication` remain scripted simulations, not independent judgment. No paid model was called.
+=======
+A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON. The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
+
+The hosted page was built from later open pull requests that have not been merged into this default branch.
+>>>>>>> origin/main
 
 ## How to run
 
@@ -202,5 +208,8 @@ The contradictory billed-amount case still cites both original spans and sets `c
 ## License
 
 MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler.
+<<<<<<< HEAD
 
 Upstream licenses for the validation tooling are in `THIRD_PARTY_NOTICES.md`. The validation stack is test tooling, not a third application.
+=======
+>>>>>>> origin/main
