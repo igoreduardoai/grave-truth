@@ -1,0 +1,3 @@
+input: "The patient responsibility is $42.15 on the synthetic explanation of benefits."
+transformation: "That sentence is kept only when the synthetic bill states it. A penalty the bill never mentions is not found."
+result: "A dispute letter or a clause list you can download. Each cited line is linked to its span."

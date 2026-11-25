@@ -11,7 +11,10 @@ The feature specs that drive the implementation are:
 
 - `.kiro/specs/citation-grounding/` — spans, abstention, and rejection of swapped numbers.
 - `.kiro/specs/demo-apps/` — the two application folders and the offline CLI.
-- `.kiro/specs/haunted-demo/` — the local haunted page and the judge walkthrough.
+- `.kiro/specs/haunted-demo/` — the local haunted page, paste-or-pick checking, and the judge walkthrough.
+- `.kiro/specs/pre-submission-validation/` — local test tooling (pytest, gold, browser, axe-core, Lighthouse, one opt-in persona loop). Not a third application.
+- `.kiro/specs/adjudication-loop/` — scripted evaluator-versus-critic loop with allowlisted repair. Not a live judge.
+- `.kiro/specs/workflow-artifact/` — the downloadable dispute letter and clause list, `?judge=1`, and `GET /health`.
 
 ## Requirements
 
@@ -28,3 +31,4 @@ The feature specs that drive the implementation are:
 - Clinical or legal advice.
 - Reusing code from prior hackathon repositories.
 - A hosted model in the answer path.
+- Treating `validation/` as a third Skeleton Crew application. It is pre-submission test tooling.

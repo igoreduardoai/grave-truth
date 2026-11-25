@@ -1,8 +1,12 @@
 # Grave Truth
 
-A citation-grounded document-agent skeleton for [Kiroween 2026](https://kiroween.devpost.com/), Skeleton Crew. Every answer quotes a source span or says `not found`. A number from one clause cannot support a different subject.
+The task is to read one explanation of benefits, or one lease clause, and see which line supports a claim. On the synthetic fixtures, patient responsibility (`$42.15`) is not the pharmacy charge (`$18.40`), and the security deposit (`$1,850.00`) is not monthly rent even though the figure is the same. Without the checker, the workaround is to scan the page for the figure and decide by eye whether the words next to it are the right subject.
 
-Skeleton Crew here means two applications on one library, with the specs, steering, and hooks committed in `.kiro` (that directory is not gitignored). The haunted page is a third view of the same library. It does not carry a second ranker.
+Grave Truth runs that check on the fixture. A claim stays on the page, with a Cited badge, only when a source span contains it, and that clause is marked in gold. A claim with no supporting span is a ghost: the sentence fades and the badge says Ghost. The page does not invent a third number to fill the gap.
+
+The mechanism is cited-or-ghost grounding in `DocumentAgent` (`src/grave_truth/skeleton.py`). `answer` quotes a sentence span or returns `not found`. `reject_ungrounded_claim` returns true when the number sits in a different clause, when the only figure for that subject is negated (`not`, `never`, `no`, or `without` in front of the number), or when the only amount is a currency code the parser does not treat as dollars (`EUR 18`, and the other codes listed in the library). A parsed `$` figure for the same subject is still quoted. The haunted page posts to a local process that calls this library. It does not reimplement the checker and it does not send the document anywhere.
+
+This is a [Kiroween 2026](https://kiroween.devpost.com/) Skeleton Crew project. Skeleton Crew here means two applications on one library. The Kiro pieces that are actually in the repo are the specs, steering files, and hooks under `.kiro/` (that directory is not gitignored). This run did not record a Kiro IDE session. The haunted page is a third view of the same library. It does not carry a second ranker. The evaluator and critic in `validation/adjudication` are scripted simulations, not independent judges. A live model judge was not called.
 
 Two applications share that skeleton:
 
@@ -17,9 +21,43 @@ This is a research demo. It is not a medical device and not legal advice. Docume
 
 ## Hosted demo
 
-A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON. The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
+A no-login demo is at [https://grave-truth.vercel.app](https://grave-truth.vercel.app). Open [https://grave-truth.vercel.app/?judge=1](https://grave-truth.vercel.app/?judge=1) to check the synthetic bill and fill the dispute letter with no second click. `GET /health` returns static JSON (`mode` is `offline`; the live model path is unimplemented). The hosted page processes pasted text on the server and does not store it. For a fully offline run, use the local commands below. Do not paste a real bill, a real lease, or anyone's personal information.
 
-The hosted page was built from later open pull requests that have not been merged into this default branch.
+A walkthrough video (under three minutes, YouTube, currently unlisted) is at [https://youtu.be/N4m-68hVEzw](https://youtu.be/N4m-68hVEzw).
+
+## Judge quickstart
+
+One command, from the repo root. No API key and no network:
+
+```bash
+python3 demos/haunted/server.py
+```
+
+Open the `http://127.0.0.1:8765/` URL the process prints. Add `?judge=1` to that URL to check the synthetic bill and fill the dispute letter with no second click and no API key. `GET /health` on the same process returns static JSON. The live model path is unimplemented.
+
+Pick the sample EOB or the sample lease, or paste a synthetic document. Type a question, a proposed answer, or both, then choose **Check grounding**. **Build the workflow file** writes a markdown dispute letter or a clause list. Each cited claim in that file includes the span offsets. A claim the checker does not support says not found. Examples under the form fill both and run the check.
+
+`python3 scripts/build_static.py` writes `site/`, including `judge.html` and the two markdown files. That command does not deploy anything. `python3 -m http.server` from `site/` would only serve those files. It would not answer a new question.
+
+Cited claims stay on the page, with a Cited badge, and the source clause is marked in gold. Claims with no supporting clause are ghosts: the sentence fades and a Ghost badge stays. The page posts to that local process, which calls `DocumentAgent` in `src/grave_truth`. It does not reimplement the checker and it does not send the document anywhere.
+
+`python3 -m http.server` only serves the static files. It does not answer questions.
+
+## Before and after
+
+Measured by the tests named in the last column. The checker’s abstention on the 17 not-found gold cases was already the behavior on the parent of this change. The new row is the comparison against quoting the first sentence of the fixture.
+
+| Behavior | Before this change | After this change | Test |
+|---|---|---|---|
+| Opening the page runs the sample | The form waits for **Check grounding** | `?judge=1` checks the synthetic bill and fills the letter with no second click | `tests/test_judge_mode.py` |
+| End of the demo | A verdict on the page | A markdown dispute letter or clause list. Each cited span slices the document. Other claims say not found | `tests/test_export_artifact.py` |
+| `GET /health` | Not a route (HTTP 404) | Static JSON. `live_model` is `unimplemented` | `tests/test_judge_mode.py` |
+| On-save eval hook | Gold suite | Gold suite and the held-out snapshot. The hook does not edit the holdout files | `tests/test_kiro_loadbearing.py` |
+| Editor file access | The fixtures are ordinary files | A keyless MCP server returns the two synthetic fixtures and 0 bytes for any other name | `tests/test_fixture_mcp.py` |
+| Not-found gold cases | Quoting the first sentence of the fixture would cite 17 of 17 | The checker cites 0 of 17 | `tests/test_capability_contrast.py` |
+| Default workflow claims | Copying the claims attaches 0 spans | The two sample files together attach 4 spans | `tests/test_capability_contrast.py` |
+
+The Kiro files under `.kiro/` are specs, steering, hooks, and a keyless MCP config. This run did not record a Kiro IDE session. The with/without numbers above are pytest measurements, not a recording of the IDE. The evaluator and critic in `validation/adjudication` remain scripted simulations, not independent judgment. No paid model was called.
 
 ## How to run
 
@@ -42,6 +80,14 @@ python3 lease-checker/main.py "How many days written notice are required to term
 python3 scripts/demo_walkthrough.py
 python3 demos/haunted/server.py
 ```
+
+Pre-submission check (pytest, gold cases, scripted browser journeys, axe-core, Lighthouse). No model API:
+
+```bash
+sh validation/run.sh
+```
+
+Details, licenses, and the last observed run are in `validation/README.md` and `validation/reports/OBSERVED.md`.
 
 `scripts/demo_walkthrough.py` prints a judge transcript for both apps: question, answer, quote span, and pass/fail. It exits 0 when every gold case passes. Run it before treating the demo as working.
 
@@ -74,9 +120,9 @@ print(result.citations[0].span)
 1. `DocumentAgent.ingest` stores a document and splits it into sentence spans. Ingesting the same id again replaces those spans.
 2. `retrieve` ranks spans by token overlap. Boilerplate such as "explanation of benefits" does not outvote a subject word. A question that names a subject the file does not contain returns no spans.
 3. `answer` quotes the winning span, or two spans when the question covers two subjects. A bare shared amount cites each clause that contains it. Every number in the answer text is in a cited span. Offsets slice the source.
-4. `reject_ungrounded_claim` returns true when a number or id (`CLM-20481`) is missing, or when the number sits in a different clause. `$1,850.00` and `1850` are the same value. `20%` is not `20`.
+4. `reject_ungrounded_claim` returns true when a number or id (`CLM-20481`) is missing, when the number sits in a different clause, when the figure's prefix negates it and no positive figure for that subject exists, or when the amount is only a currency code such as `EUR` or `USD`. `$1,850.00` and `1850` are the same value. `20%` is not `20`. `EUR 18` is not `$18.00`.
 
-Uncited claims do not survive as answers (`GroundedAnswer.ghost`).
+Uncited claims do not survive as answers (`GroundedAnswer.ghost`). A question whose only matching figure is negated, or whose only amount uses an unparsed currency code, is `not found`.
 
 A few question-side aliases (`doctor` → `provider`, `renter` → `resident`, `termination` → `terminate`) only help retrieval. The printed answer is still the original sentence.
 
@@ -89,13 +135,17 @@ Specs (requirements, design, tasks):
 - `.kiro/specs/grave-truth.md` — overview
 - `.kiro/specs/citation-grounding/` — spans, abstention, rejection
 - `.kiro/specs/demo-apps/` — the two app folders and the CLI
+- `.kiro/specs/haunted-demo/` — the local page: paste or pick a document, cited claims and ghosts
+- `.kiro/specs/workflow-artifact/` — the downloadable dispute letter and clause list, `?judge=1`, and `GET /health`
+- `.kiro/specs/pre-submission-validation/` — local checks around that page. Not a third application.
 
 Steering in `.kiro/steering/`:
 
-- `no-invention.md`, `product.md`, `tech.md`, `structure.md` load always
+- `no-invention.md`, `cite-or-abstain.md`, `product.md`, `tech.md`, `structure.md` load always
 - `testing-gold-cases.md` and `fixture-safety.md` load by file match
 - `add-gold-case.md` loads automatically when eval work is in context
 - `demo-walkthrough.md` is manual (`#demo-walkthrough`)
+- `validation-stack.md` loads by file match on `validation/`
 
 Hooks in `.kiro/hooks/`:
 
@@ -104,9 +154,12 @@ Hooks in `.kiro/hooks/`:
 - `pytest-on-save.json` — v1 command hook for pytest
 - `grounding-reminder.json` — v1 agent prompt after `skeleton.py` changes
 - `block-secret-files.json` — v1 `PreToolUse` command that exits 2 for `.env`, key, and `secrets/` paths (`scripts/kiro_guard_no_secrets.py`)
-- `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough before claiming the demo works
+- `walkthrough-before-demo.json` — v1 agent prompt after `demos/haunted/` or `scripts/demo_walkthrough.py` changes, to run the walkthrough and the web demo tests before claiming the demo works
+- `gold-holdout-on-save.json` — v1 command hook that runs `python3 evals/run_gold_and_holdout.py` (gold suite, then the held-out snapshot). It does not edit the holdout files.
 
-Run the hook command locally with `python3 evals/run_evals.py`. The demo check is `python3 scripts/demo_walkthrough.py`.
+`.kiro/settings/mcp.json` starts `scripts/fixture_mcp.py`. That process reads two synthetic fixtures and returns no bytes for any other name. It does not use an API key.
+
+Run the gold hook locally with `python3 evals/run_evals.py`. Run gold and the holdout comparison with `python3 evals/run_gold_and_holdout.py`. The demo check is `python3 scripts/demo_walkthrough.py`. This run did not record a Kiro IDE session.
 
 ## Eval results
 
@@ -120,24 +173,34 @@ Gold cases live in `evals/gold_cases.json`.
 | accept_grounded | 22 |
 | **Total** | **90** |
 
-Last local run (2026-11-07):
+Measured on this working tree on 2026-11-17, except the `python3 -m validation run` line, which is the 2026-11-09 laboratory run and was not repeated:
 
-- `python3 evals/run_evals.py` → **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22)
-- `python3 -m pytest` → **31 passed**
-- `python3 scripts/demo_walkthrough.py` → exit 0, `passed 90/90` (accept_grounded 22, cited 33, not_found 17, reject_ungrounded 18)
+- `python3 evals/run_evals.py` → exit 0, **90/90 passed** (cited 33, not_found 17, reject_ungrounded 18, accept_grounded 22).
+- `python3 -m pytest -q` → exit 0, **96 passed**, 0 failed.
+- `python3 scripts/capture_gallery.py` → 8 Playwright screenshots in `gallery/`. axe-core violations **0** and incomplete **0** on each of those 8 pages (`gallery/axe-report.json`).
+- `python3 -m validation.adjudication` → exit 0, **8/8** scripted scenarios. The repair scenario sets `focusable` true and the retest passes. These reviewers are scripted simulations, not independent judges. Live evaluator/critic was not validated.
+- `python3 scripts/demo_walkthrough.py` → covered inside pytest; the walkthrough test passes.
+- `evals/holdout_cases.json` was not edited. The remeasurement in `evals/holdout_observed.json` is **7/7** intended checks met. The two rows that previously quoted a negated sentence and a `USD` amount now return `not found`. The new regressions are different documents in `evals/adversarial_cases.json` (a copay that is never `$15.00`, a locker deposit that is not collected, a lab fee listed without a price, and `EUR 18` beside a deductible).
+- `python3 -m validation run` → exit 0 for the automated commands. Scripted tasks **10/10**, citation **7/7**, refusal **3/3**, negative controls **3/3**, browser-guard probe caught, stability **2/2** identical marks on `eob-billed`, axe-core violations **0**, incomplete **0** (color-contrast resolved on the initial page and the cited EOB state), LLM persona skipped, observed cost $0. Decision: **insufficient-evidence**, because sponsor/new-work, eligibility, and human review are still manual. See `validation/reports/OBSERVED.md`. Lighthouse figures in that report are laboratory diagnostics, not a grade.
 
-The gold-case table matches `evals/gold_cases.json`. Counts above are from the local run on 2026-11-07.
+The contradictory billed-amount case still cites both original spans and sets `conflict`. The 90 gold cases still pass. Nothing here is a prize estimate or a quality score.
 
 ## Limits
 
 - Research demo. Not a medical device. Not legal advice. Not a coverage decision and not a contract review.
-- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches.
+- Retrieval is lexical and offline. Paraphrases outside the small alias list abstain instead of guessing. A Portuguese question against the English-only lease is `not found` when no span matches. The demo and this file are English-primary.
+- Two different figures for the same subject are a conflict. The answer cites both original spans and does not pick one. `$240` and `$240.00` are the same figure. A claim that names only one side of a conflict is rejected.
+- A negated figure is not a positive amount. If another span states a positive figure for that subject, the answer quotes the positive span. If the only figure is negated, the answer is `not found`.
+- A currency code immediately before a number is not a parsed dollar amount. `EUR 18` does not support `$18.00`. If a `$` figure for that subject is also in the file, the answer quotes the `$` span. There is no general currency converter.
 - The pharmacy charge (`$18.40`) and the patient responsibility (`$42.15`) are different clauses. The late fee (`$75.00`) is not monthly rent (`$1,850.00`). Same value with a different `$` or comma form still counts as that value.
 - Citations are sentences. A sentence that contains two dates is quoted whole.
 - The agent quotes the file. It does not know whether the file is true outside that file.
-- One synthetic document per app. No insurer, clinic, or landlord has used this software.
+- One synthetic document per app. No insurer, clinic, or landlord has used this software. There is no measured demand, efficacy, or field comparison.
+- Sponsor rules, eligibility, and a human review of the demo are not automatically verified by the local validation stack. A walkthrough video exists at [https://youtu.be/N4m-68hVEzw](https://youtu.be/N4m-68hVEzw). This run did not record a Kiro IDE session.
 - Same numeric value with different `$` / comma formatting counts as one number. A different value is rejected even if it appears next to another subject.
 
 ## License
 
 MIT. Built as a new project after 30 October 2026 for Kiroween. Igor Eduardo, Founder in Residence at Antler.
+
+Upstream licenses for the validation tooling are in `THIRD_PARTY_NOTICES.md`. The validation stack is test tooling, not a third application.

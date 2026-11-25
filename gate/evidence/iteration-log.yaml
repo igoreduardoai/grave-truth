@@ -1,0 +1,3 @@
+rounds:
+  - kind: scripted-simulation
+    note: "validation/adjudication is a scripted evaluator and critic. It is not an independent judge."

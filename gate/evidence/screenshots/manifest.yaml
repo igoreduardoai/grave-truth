@@ -1,0 +1,2 @@
+images: []
+note: "gallery/ holds the Playwright PNGs and gallery/axe-report.json. Those files sit outside this package, so this manifest does not count them. They were not copied here."

@@ -1,0 +1,6 @@
+kind: file_artifact
+one_line: "The demo writes a markdown dispute letter whose cited claims carry span offsets."
+ran_in_sponsor_sandbox: false
+simulated: true
+observed_result: ""
+simulation_reason: "The markdown file is produced by the local checker on synthetic fixtures. This run did not record a Kiro IDE session, so the file was not produced inside a sponsor sandbox."

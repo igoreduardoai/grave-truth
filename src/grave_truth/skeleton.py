@@ -72,6 +72,12 @@ _QUERY_ALIASES = {
 _MIN_SCORE = 0.22
 _NEAR_TIE = 0.55
 _SUBJECT_WINDOW = 60
+_NEGATION = re.compile(r"\b(?:not|never|no|without)\b", re.IGNORECASE)
+# A currency code is not a parsed amount. `$18` and `EUR 18` are not the same evidence.
+_CURRENCY_CODE = re.compile(
+    r"\b(?:USD|EUR|GBP|CAD|AUD|CHF|JPY|CNY|INR|BRL|MXN)\s*$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -87,6 +93,7 @@ class GroundedAnswer:
     text: str
     citations: list[Citation] = field(default_factory=list)
     found: bool = False
+    conflict: bool = False
 
     @property
     def ghost(self) -> bool:
@@ -145,12 +152,27 @@ class DocumentAgent:
         return _select_spans(ranked, q_content, limit)
 
     def answer(self, question: str) -> GroundedAnswer:
+        conflict = _contradictory_chunks(self._chunks, question)
+        if conflict:
+            return self._quote(conflict, conflict=True)
         hits = self.retrieve(question, limit=2)
         if not hits:
             return _not_found()
+        negated = _primary_chunks(self._chunks, question, kind="negated")
+        positive = _primary_chunks(self._chunks, question, kind="parsed")
+        currency = _primary_chunks(self._chunks, question, kind="currency")
+        hits = _prefer_parsed(hits, negated, positive)
+        if hits is None:
+            return _not_found()
+        hits = _prefer_parsed(hits, currency, positive)
+        if hits is None:
+            return _not_found()
+        return self._quote(hits, conflict=False)
+
+    def _quote(self, chunks: list[_Chunk], *, conflict: bool) -> GroundedAnswer:
         citations = [
-            Citation(doc_id=hit.doc_id, span=hit.text, start=hit.start, end=hit.end)
-            for hit in sorted(hits, key=lambda hit: (hit.doc_id, hit.start))
+            Citation(doc_id=chunk.doc_id, span=chunk.text, start=chunk.start, end=chunk.end)
+            for chunk in sorted(chunks, key=lambda chunk: (chunk.doc_id, chunk.start))
         ]
         for citation in citations:
             source = self._docs.get(citation.doc_id, "")
@@ -159,15 +181,18 @@ class DocumentAgent:
         text = " ".join(citation.span for citation in citations).strip()
         if not text or not _numbers_covered(text, [citation.span for citation in citations]):
             return _not_found()
-        return GroundedAnswer(text=text, citations=citations, found=True)
+        return GroundedAnswer(text=text, citations=citations, found=True, conflict=conflict)
 
     def reject_ungrounded_claim(self, claim: str) -> bool:
-        """Return True when a proposed claim has no supporting span.
+        """Return True when a proposed claim has no unique supporting span.
 
         A number is supported only when that same value appears in a span
         and the words just before it match the claim's subject. A dollar
-        amount that belongs to a different clause does not count.
+        amount that belongs to a different clause does not count. Two
+        different figures for the same subject are not a unique support.
         """
+        if _contradictory_chunks(self._chunks, claim):
+            return True
         if not self._chunks:
             return True
         numbers = _norm_numbers(claim)
@@ -384,10 +409,22 @@ def _norm_number(raw: str) -> str | None:
     return f"{kind}:{rendered or '0'}"
 
 
+def _figure_kind(prefix: str) -> str:
+    """How the words in front of a number present that number."""
+    if _NEGATION.search(prefix):
+        return "negated"
+    if _CURRENCY_CODE.search(prefix):
+        return "currency"
+    return "parsed"
+
+
 def _norm_numbers(text: str) -> set[str]:
     found: set[str] = set()
-    for raw in _NUMBER.findall(text):
-        norm = _norm_number(raw)
+    for match in _NUMBER.finditer(text):
+        prefix = text[max(0, match.start() - _SUBJECT_WINDOW):match.start()]
+        if _figure_kind(prefix) == "currency":
+            continue
+        norm = _norm_number(match.group(0))
         if norm:
             found.add(norm)
     return found
@@ -404,12 +441,136 @@ def _numbers_covered(text: str, spans: list[str]) -> bool:
     return all(number in allowed for number in _NUMBER.findall(text))
 
 
+def _subject_hits(text: str) -> list[tuple[str, set[str], str]]:
+    """Numbers, the subject words in front of them, and how that prefix presents them.
+
+    The prefix stops at the previous number, so a later figure in the same
+    sentence is not given the earlier subject for free. `negated` and
+    `currency` are not positive assertions. `parsed` is.
+    """
+    matches = list(_NUMBER.finditer(text))
+    hits: list[tuple[str, set[str], str]] = []
+    for index, match in enumerate(matches):
+        norm = _norm_number(match.group(0))
+        if norm is None:
+            continue
+        left = match.start() - _SUBJECT_WINDOW
+        if index:
+            left = max(left, matches[index - 1].end())
+        prefix = text[max(0, left):match.start()]
+        window = {tok for tok in _token_list(prefix) if not _is_number_token(tok)}
+        if window:
+            hits.append((norm, window, _figure_kind(prefix)))
+    return hits
+
+
+def _positive_subject_hits(text: str) -> list[tuple[str, set[str]]]:
+    return [(norm, window) for norm, window, kind in _subject_hits(text) if kind == "parsed"]
+
+
+def _contradictory_chunks(chunks: list[_Chunk], question: str) -> list[_Chunk]:
+    """Spans that state different figures for one subject the question names.
+
+    Each figure is assigned to the rarest question word in its own prefix.
+    Two subjects in one question stay apart. The same normalized figure
+    written as $240 and $240.00 is one figure. A negated prefix is ignored.
+    """
+    query_tokens, _bigrams = _analyze_query(question)
+    q_terms = {tok for tok in query_tokens if not _is_number_token(tok)}
+    if not q_terms or not chunks:
+        return []
+    idf = _idf_map(chunks)
+    n_chunks = len(chunks)
+    primary = max(q_terms, key=lambda tok: (_idf_value(tok, idf, n_chunks), len(tok)))
+    by_norm: dict[str, list[_Chunk]] = {}
+    for chunk in chunks:
+        seen_norm: set[str] = set()
+        for norm, window in _positive_subject_hits(chunk.text):
+            overlap = window & q_terms
+            if primary not in overlap:
+                continue
+            focus = max(overlap, key=lambda tok: (_idf_value(tok, idf, n_chunks), len(tok)))
+            if focus != primary or norm in seen_norm:
+                continue
+            seen_norm.add(norm)
+            by_norm.setdefault(norm, []).append(chunk)
+    if len(by_norm) < 2:
+        return []
+    chosen: list[_Chunk] = []
+    seen: set[tuple[str, int, int]] = set()
+    for group in by_norm.values():
+        for chunk in group:
+            key = (chunk.doc_id, chunk.start, chunk.end)
+            if key in seen:
+                continue
+            seen.add(key)
+            chosen.append(chunk)
+    chosen.sort(key=lambda chunk: (chunk.doc_id, chunk.start))
+    return chosen
+
+
+def _primary_chunks(chunks: list[_Chunk], question: str, *, kind: str) -> list[_Chunk]:
+    """Chunks whose figure for the question's rarest subject word has this kind."""
+    query_tokens, _bigrams = _analyze_query(question)
+    q_terms = {tok for tok in query_tokens if not _is_number_token(tok)}
+    if not q_terms or not chunks:
+        return []
+    idf = _idf_map(chunks)
+    n_chunks = len(chunks)
+    primary = max(q_terms, key=lambda tok: (_idf_value(tok, idf, n_chunks), len(tok)))
+    chosen: list[_Chunk] = []
+    seen: set[tuple[str, int, int]] = set()
+    for chunk in chunks:
+        for _norm, window, hit_kind in _subject_hits(chunk.text):
+            if hit_kind != kind:
+                continue
+            overlap = window & q_terms
+            if primary not in overlap:
+                continue
+            focus = max(overlap, key=lambda tok: (_idf_value(tok, idf, n_chunks), len(tok)))
+            if focus != primary:
+                continue
+            key = (chunk.doc_id, chunk.start, chunk.end)
+            if key not in seen:
+                seen.add(key)
+                chosen.append(chunk)
+            break
+    return chosen
+
+
+def _prefer_parsed(
+    hits: list[_Chunk],
+    blocked: list[_Chunk],
+    parsed: list[_Chunk],
+) -> list[_Chunk] | None:
+    """Drop blocked spans. Abstain when they were the only hits and nothing parsed remains."""
+    if not blocked:
+        return hits
+    blocked_keys = {(chunk.doc_id, chunk.start, chunk.end) for chunk in blocked}
+    kept = [hit for hit in hits if (hit.doc_id, hit.start, hit.end) not in blocked_keys]
+    if kept:
+        return kept
+    if parsed:
+        return parsed[:2]
+    return None
+
+
 def _number_supported(claim: str, span: str, norm: str) -> bool:
+    claim_kinds = {
+        _figure_kind(claim[max(0, match.start() - _SUBJECT_WINDOW):match.start()])
+        for match in _NUMBER.finditer(claim)
+        if _norm_number(match.group(0)) == norm
+    }
+    claim_kinds.discard("currency")
+    if not claim_kinds:
+        return False
     subjects: set[str] = set()
     for match in _NUMBER.finditer(span):
         if _norm_number(match.group(0)) != norm:
             continue
         prefix = span[max(0, match.start() - _SUBJECT_WINDOW):match.start()]
+        if _figure_kind(prefix) not in claim_kinds:
+            continue
         subjects.update(_token_list(prefix))
     if not subjects:
         return False

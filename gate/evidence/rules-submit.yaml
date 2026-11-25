@@ -1,0 +1,8 @@
+repo_anonymous_test: not-run
+video_anonymous_test: not-run
+license_required: true
+license_present: true
+license_name: MIT
+deadline_reread_on: "2026-11-17"
+deadline_timezone: America/Chicago
+note: "LICENSE at the repository root is MIT. No private-window check of the repo or a video was done."

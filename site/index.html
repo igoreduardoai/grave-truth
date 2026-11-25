@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grave Truth — haunted clauses</title>
+  <meta name="description" content="Grave Truth keeps a figure only when the document states it. It quotes the sentence, or it says not found.">
+  <link rel="preload" href="inter.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#result">Skip to result</a>
+  <nav class="topbar" aria-label="Grave Truth">
+    <div class="topbar-inner">
+      <span class="brand">
+        <svg class="icon brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg>
+        <span class="brand-name">Grave Truth</span>
+      </span>
+      <span class="pill eyebrow">Kiroween 2026 · Skeleton Crew · local only</span>
+    </div>
+  </nav>
+  <header class="hero" id="hero">
+    <h1>A figure stays only when the document states it.</h1>
+    <p class="lede">Grave Truth checks one synthetic explanation of benefits, or one synthetic lease. It quotes the sentence, or it says not found.</p>
+    <ol class="storyboard">
+      <li><span class="step">Input.</span> The patient responsibility is $42.15.</li>
+      <li><span class="step">Check.</span> That sentence is kept only when the synthetic bill states it. A penalty the bill never mentions is not found.</li>
+      <li><span class="step">Result.</span> A dispute letter or a clause list you can download. Each cited line is linked to its span. Anything else says not found.</li>
+    </ol>
+    <p class="disclaimer"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span>Research demo on synthetic text. Not a medical device and not legal advice. Nothing is sent off this machine. Do not paste a real bill, a real lease, or anyone's personal information.</span></p>
+  </header>
+
+  <main>
+    <section class="controls card" aria-label="Ask">
+      <form id="ask-form">
+        <fieldset>
+          <legend>Document</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="app" value="eob" checked> Sample EOB</label>
+            <label class="choice"><input type="radio" name="app" value="lease"> Sample lease</label>
+            <label class="choice"><input type="radio" name="app" value="paste"> Paste a document</label>
+          </div>
+        </fieldset>
+
+        <div id="paste-field" hidden>
+          <label for="document">Pasted document</label>
+          <textarea id="document" name="document" rows="8" spellcheck="false" autocomplete="off" aria-describedby="document-hint"></textarea>
+          <p id="document-hint" class="hint">Synthetic text only. The checker ingests this text with the same library as the evals.</p>
+        </div>
+
+        <label for="question">Question</label>
+        <textarea id="question" name="question" rows="2" autocomplete="off">What is the patient responsibility?</textarea>
+
+        <label for="answer">Proposed answer</label>
+        <textarea id="answer" name="answer" rows="3" autocomplete="off" aria-describedby="answer-hint"></textarea>
+        <p id="answer-hint" class="hint">Optional. Each sentence is checked. A sentence with no supporting clause is a ghost. Ctrl+Enter checks.</p>
+
+        <button type="submit" class="ask primary">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+          Check grounding
+        </button>
+      </form>
+
+      <p class="presets-label" id="presets-label">Examples</p>
+      <div class="presets" id="presets" role="group" aria-labelledby="presets-label"></div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="stage card" id="result" tabindex="-1">
+      <div aria-live="polite">
+      <h2>Result</h2>
+      <div id="verdict" class="verdict" tabindex="-1">Ask a question or paste an answer. The page calls the local Python library.</div>
+      <div id="question-result"></div>
+      <ul id="claims" class="claims"></ul>
+      <div id="ghost-host"></div>
+      <p id="quote-label" class="hint" hidden>Quoted clause</p>
+      <blockquote id="quote" hidden></blockquote>
+      </div>
+
+      <h2 class="section-title">Source <span id="doc-id" class="doc-id"></span></h2>
+      <article id="source" class="source" tabindex="0">Loading the synthetic fixture…</article>
+
+      <h2 class="section-title">Workflow file</h2>
+      <p class="hint" id="artifact-note">The file lists each claim with the span that supports it, or with not found. Open <code>?judge=1</code> and the synthetic letter is filled with no second click.</p>
+      <div class="artifact-actions">
+        <a class="artifact-download secondary" id="artifact-download" href="/api/export?app=eob&amp;format=markdown"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Download the dispute letter</a>
+        <button type="button" id="build-file" class="ask secondary">Build the workflow file</button>
+      </div>
+      <pre id="artifact" tabindex="0" aria-label="Workflow file">The letter appears here. No figure is added that the document does not state.</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>From the repo root run <code>python3 demos/haunted/server.py</code>, then open the printed localhost URL. <code>python3 -m http.server</code> only serves these files. Answers come from <code>DocumentAgent</code>. Built by Igor Eduardo.</p>
+    <p><a href="kiro.html">Kiro capability matrix</a></p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

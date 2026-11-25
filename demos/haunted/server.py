@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Offline haunted demo. Stdlib HTTP server bound to 127.0.0.1.
 
-Answers come from DocumentAgent and the synthetic fixtures. No model API
-and no outbound requests. Uncited claims are ghosts. Cited answers carry
+Answers come from DocumentAgent. The page can pick a synthetic fixture or
+paste a document, then ask a question or check a proposed answer. No model
+API and no outbound requests. Uncited claims are ghosts. Cited claims carry
 the source span offsets the page highlights.
 
     python3 demos/haunted/server.py
@@ -12,6 +13,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,25 +23,76 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 from grave_truth.apps import eob, lease  # noqa: E402
+from grave_truth.artifact import build_artifact  # noqa: E402
+from grave_truth.health import HEALTH_BODY  # noqa: E402
+from grave_truth.matrix_page import render_matrix_document  # noqa: E402
+from grave_truth.skeleton import DocumentAgent  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-MAX_BODY = 8192
+MAX_BODY = 48000
+MAX_DOCUMENT = 16384
+MAX_QUESTION = 1000
+MAX_ANSWER = 4000
+_CLAIM_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
 STATIC = {
     "/": "index.html",
     "/index.html": "index.html",
     "/app.js": "app.js",
     "/style.css": "style.css",
+    "/inter.woff2": "inter.woff2",
 }
 CONTENT_TYPES = {
     "index.html": "text/html; charset=utf-8",
     "app.js": "text/javascript; charset=utf-8",
     "style.css": "text/css; charset=utf-8",
+    "inter.woff2": "font/woff2",
 }
-APP_LABELS = {"eob": "eob-explainer", "lease": "lease-checker"}
-DOC_IDS = {"eob": "sample-eob", "lease": "sample-lease"}
+# Copy that is only true on 127.0.0.1. A hosted deployment (Vercel sets VERCEL=1,
+# or GRAVE_TRUTH_HOSTED=1) gets accurate wording instead. Local runs are unchanged.
+HOSTED_NOTICE = (
+    "Hosted demo: pasted text is processed on the server and not stored. "
+    "Run locally for fully offline use."
+)
+HOSTED_COPY = {
+    "index.html": (
+        ("Kiroween 2026 · Skeleton Crew · local only", "Kiroween 2026 · Skeleton Crew · hosted demo"),
+        ("Nothing is sent off this machine.", HOSTED_NOTICE),
+        ("The page calls the local Python library.", "The page calls the same Python library on the demo server."),
+    ),
+    "app.js": (
+        ("A pasted document stays on this machine and is not written into that file.",
+         "A pasted document is processed on the demo server, is not stored, and is not written into that file."),
+        ("Checking with the local library…", "Checking with the library on the demo server…"),
+        ("The local server rejected the request.", "The demo server rejected the request."),
+    ),
+}
+
+
+def is_hosted() -> bool:
+    return os.environ.get("VERCEL") == "1" or os.environ.get("GRAVE_TRUTH_HOSTED") == "1"
+
+
+def static_bytes(name: str, hosted: bool | None = None) -> bytes:
+    data = (HERE / name).read_bytes()
+    if not (is_hosted() if hosted is None else hosted) or name not in HOSTED_COPY:
+        return data
+    text = data.decode("utf-8")
+    for old, new in HOSTED_COPY.get(name, ()):
+        if old not in text:
+            raise RuntimeError(f"hosted copy anchor missing in {name}: {old!r}")
+        text = text.replace(old, new)
+    return text.encode("utf-8")
+
+
+APP_LABELS = {
+    "eob": "eob-explainer",
+    "lease": "lease-checker",
+    "paste": "pasted document",
+}
+DOC_IDS = {"eob": "sample-eob", "lease": "sample-lease", "paste": "pasted-document"}
 
 
 def _load(app: str):
@@ -50,8 +104,11 @@ def _load(app: str):
 
 
 def _document(app: str) -> str:
-    fixture = eob.FIXTURE if app == "eob" else lease.FIXTURE
-    return fixture.read_text(encoding="utf-8")
+    if app == "eob":
+        return eob.FIXTURE.read_text(encoding="utf-8")
+    if app == "lease":
+        return lease.FIXTURE.read_text(encoding="utf-8")
+    raise ValueError("app must be eob or lease")
 
 
 def _citations(result) -> list[dict]:
@@ -66,71 +123,155 @@ def _citations(result) -> list[dict]:
     ]
 
 
+def _text(value, name: str, limit: int) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be a string")
+    text = value.strip()
+    if len(text) > limit:
+        raise ValueError(f"{name} is too long")
+    return text
+
+
+def _split_claims(answer: str) -> list[str]:
+    parts = [part.strip() for part in _CLAIM_SPLIT.split(answer) if part.strip()]
+    return parts or [answer]
+
+
+def _agent_for(payload: dict, app: str):
+    """Return the shared agent, the exact text it ingested, id, and label."""
+    if app == "paste":
+        document = _text(payload.get("document"), "document", MAX_DOCUMENT)
+        if not document:
+            raise ValueError("document is required")
+        agent = DocumentAgent()
+        agent.ingest(DOC_IDS["paste"], document)
+        return agent, document, DOC_IDS["paste"], APP_LABELS["paste"]
+    if app not in {"eob", "lease"}:
+        raise ValueError("app must be eob, lease, or paste")
+    extra = payload.get("document")
+    if isinstance(extra, str) and extra.strip():
+        raise ValueError("document is only accepted when app is paste")
+    return _load(app), _document(app), DOC_IDS[app], APP_LABELS[app]
+
+
+def _judge_claim(agent: DocumentAgent, sentence: str) -> dict:
+    """Cite a sentence only when DocumentAgent accepts it and can quote a span."""
+    if not agent.reject_ungrounded_claim(sentence):
+        result = agent.answer(sentence)
+        if result.found and result.citations:
+            return {
+                "text": sentence,
+                "ghost": False,
+                "verdict": "cited",
+                "citations": _citations(result),
+            }
+    return {"text": sentence, "ghost": True, "verdict": "rejected", "citations": []}
+
+
+def _answer_verdict(result) -> str:
+    if result.conflict:
+        return "conflict"
+    if result.found:
+        return "cited"
+    return "not_found"
+
+
+def _question_result(agent: DocumentAgent, question: str) -> dict:
+    result = agent.answer(question)
+    return {
+        "question": question,
+        "verdict": _answer_verdict(result),
+        "conflict": result.conflict,
+        "ghost": result.ghost,
+        "answer": result.text,
+        "citations": _citations(result),
+    }
+
+
 def ask_payload(payload: dict) -> dict:
     """Run one local question or claim. Raises ValueError on a bad request."""
     app = payload.get("app")
-    if app not in APP_LABELS:
-        raise ValueError("app must be eob or lease")
-    question = payload.get("question")
-    if not isinstance(question, str):
-        raise ValueError("question must be a string")
-    question = question.strip()
-    if not question:
-        raise ValueError("question is required")
-    if len(question) > 1000:
-        raise ValueError("question is too long")
+    if not isinstance(app, str):
+        raise ValueError("app must be eob, lease, or paste")
+    agent, document, doc_id, label = _agent_for(payload, app)
+    question = _text(payload.get("question"), "question", MAX_QUESTION)
+    answer = _text(payload.get("answer"), "answer", MAX_ANSWER)
+    if not question and not answer:
+        raise ValueError("question or answer is required")
+
+    base = {
+        "app": app,
+        "app_label": label,
+        "question": question,
+        "document_id": doc_id,
+        "document": document,
+    }
+    if answer:
+        mode = payload.get("mode") or "check"
+        if mode not in {"answer", "reject", "check"}:
+            raise ValueError("mode must be answer, reject, or check")
+        claims = [_judge_claim(agent, sentence) for sentence in _split_claims(answer)]
+        ghosts = [claim["ghost"] for claim in claims]
+        if all(ghosts):
+            verdict, ghost = "rejected", True
+        elif any(ghosts):
+            verdict, ghost = "mixed", False
+        else:
+            verdict, ghost = "cited", False
+        body = {
+            **base,
+            "mode": "check",
+            "verdict": verdict,
+            "ghost": ghost,
+            "answer": answer,
+            "citations": [item for claim in claims for item in claim["citations"]],
+            "claims": claims,
+        }
+        if question:
+            body["question_result"] = _question_result(agent, question)
+        return body
+
     mode = payload.get("mode") or "answer"
     if mode not in {"answer", "reject"}:
         raise ValueError("mode must be answer or reject")
-
-    agent = _load(app)
-    document = _document(app)
     if mode == "reject":
         rejected = agent.reject_ungrounded_claim(question)
         if rejected:
             return {
-                "app": app,
-                "app_label": APP_LABELS[app],
+                **base,
                 "mode": mode,
-                "question": question,
                 "verdict": "rejected",
                 "ghost": True,
                 "answer": "rejected",
-                "document_id": DOC_IDS[app],
-                "document": document,
                 "citations": [],
             }
         result = agent.answer(question)
         return {
-            "app": app,
-            "app_label": APP_LABELS[app],
+            **base,
             "mode": mode,
-            "question": question,
             "verdict": "accepted",
             "ghost": False,
             "answer": result.text if result.found else "accepted",
-            "document_id": DOC_IDS[app],
-            "document": document,
             "citations": _citations(result) if result.found else [],
         }
 
     result = agent.answer(question)
+    verdict = _answer_verdict(result)
     return {
-        "app": app,
-        "app_label": APP_LABELS[app],
+        **base,
         "mode": mode,
-        "question": question,
-        "verdict": "cited" if result.found else "not_found",
+        "verdict": verdict,
+        "conflict": result.conflict,
         "ghost": result.ghost,
         "answer": result.text,
-        "document_id": DOC_IDS[app],
-        "document": document,
         "citations": _citations(result),
     }
 
 
 def document_payload(app: str) -> dict:
-    if app not in APP_LABELS:
+    if app not in {"eob", "lease"}:
         raise ValueError("app must be eob or lease")
     return {
         "app": app,
@@ -140,20 +281,41 @@ def document_payload(app: str) -> dict:
     }
 
 
+def _query(path: str) -> dict[str, str]:
+    query: dict[str, str] = {}
+    if "?" not in path:
+        return query
+    for part in path.split("?", 1)[1].split("&"):
+        if "=" in part:
+            key, value = part.split("=", 1)
+            query[key] = value
+    return query
+
+
 def route(method: str, path: str, body: bytes) -> tuple[int, str, bytes]:
     """Return status, content type, and body for one local request."""
     clean = path.split("?", 1)[0]
+    if method == "GET" and clean == "/health":
+        return 200, "application/json; charset=utf-8", HEALTH_BODY
+    if method == "GET" and clean in {"/kiro", "/kiro.html"}:
+        markdown = (ROOT / "docs" / "KIRO-CAPABILITY-MATRIX.md").read_text(encoding="utf-8")
+        page = render_matrix_document(markdown).encode("utf-8")
+        return 200, "text/html; charset=utf-8", page
+    if method == "GET" and clean == "/api/export":
+        app = _query(path).get("app", "")
+        try:
+            artifact = build_artifact(app)
+        except ValueError as exc:
+            return _error(400, str(exc))
+        if _query(path).get("format") == "markdown":
+            return 200, "text/markdown; charset=utf-8", artifact["markdown"].encode("utf-8")
+        return _json(200, artifact)
     if method == "GET" and clean in STATIC:
         name = STATIC[clean]
-        data = (HERE / name).read_bytes()
+        data = static_bytes(name)
         return 200, CONTENT_TYPES[name], data
     if method == "GET" and clean == "/api/document":
-        query = {}
-        if "?" in path:
-            for part in path.split("?", 1)[1].split("&"):
-                if "=" in part:
-                    key, value = part.split("=", 1)
-                    query[key] = value
+        query = _query(path)
         try:
             payload = document_payload(query.get("app", ""))
         except ValueError as exc:
@@ -183,6 +345,14 @@ def _error(status: int, message: str) -> tuple[int, str, bytes]:
     return _json(status, {"error": message})
 
 
+def _download_name(path: str, content_type: str) -> str | None:
+    if "markdown" not in content_type or path.split("?", 1)[0] != "/api/export":
+        return None
+    app = _query(path).get("app", "eob")
+    filename = "grave-truth-clause-issues.md" if app == "lease" else "grave-truth-dispute-letter.md"
+    return f'attachment; filename="{filename}"'
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         self._respond("GET", b"")
@@ -203,6 +373,9 @@ class Handler(BaseHTTPRequestHandler):
     def _write(self, status: int, content_type: str, data: bytes) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
+        disposition = _download_name(self.path, content_type)
+        if disposition:
+            self.send_header("Content-Disposition", disposition)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()

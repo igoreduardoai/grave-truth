@@ -104,6 +104,7 @@ def render_answer(app: str, question: str, result: GroundedAnswer) -> str:
         f"App: {app}",
         f"Question: {question}",
         f"Found: {'yes' if result.found else 'no'}",
+        f"Conflict: {'yes' if result.conflict else 'no'}",
         f"Ghost: {'yes' if result.ghost else 'no'}",
         f"Answer: {result.text}",
         "Citations:",
@@ -133,6 +134,7 @@ def _answer_payload(app: str, question: str, result: GroundedAnswer) -> dict:
         "app": app,
         "question": question,
         "found": result.found,
+        "conflict": result.conflict,
         "ghost": result.ghost,
         "answer": result.text,
         "citations": [

@@ -40,6 +40,9 @@ def test_specs_and_steering_exist():
     assert (specs / "demo-apps" / "requirements.md").is_file()
     steering = list((ROOT / ".kiro" / "steering").glob("*.md"))
     assert len(steering) >= 4
+    product = (ROOT / ".kiro" / "steering" / "product.md").read_text(encoding="utf-8")
+    assert "Igor Eduardo, Founder in Residence at Antler." in product
+    assert "Social Inc" not in product
     no_invention = (ROOT / ".kiro" / "steering" / "no-invention.md").read_text(encoding="utf-8")
     assert "not found" in no_invention
     assert "not a medical device" in no_invention

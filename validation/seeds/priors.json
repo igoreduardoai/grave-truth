@@ -1,0 +1,27 @@
+{
+  "status": "researcher_inference",
+  "not_a_rubric": true,
+  "not_a_win_probability": true,
+  "source_artifact": "validation/seeds/WINNER-PATTERNS-2026-11-08.md",
+  "retrieved": "2026-11-08",
+  "priors": [
+    {
+      "id": "task_object_changes",
+      "statement": "A memorable demo shows the change on the object of the work, not only a written answer.",
+      "source_section": "Padroes repetidos 1",
+      "cannot_override_rules": true
+    },
+    {
+      "id": "gates_are_separate",
+      "statement": "Pain, a legible demo, technical proof, and sponsor eligibility are different gates. Passing one does not prove the others.",
+      "source_section": "Resposta central",
+      "cannot_override_rules": true
+    },
+    {
+      "id": "trophy_is_not_demand",
+      "statement": "An award is not a customer, revenue, or a published judge score.",
+      "source_section": "Resposta central",
+      "cannot_override_rules": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+name: health
+
+# Probes the public demo /health. GitHub runs scheduled workflows only from the
+# default branch, so the cron starts after this file reaches main.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GET /health
+        run: |
+          body=$(curl -fsS --max-time 20 https://grave-truth.vercel.app/health)
+          echo "$body"
+          echo "$body" | grep -q '"status":"ok"'

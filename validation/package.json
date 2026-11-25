@@ -1,0 +1,11 @@
+{
+  "name": "grave-truth-validation",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Local pre-submission checks. Not the Grave Truth product.",
+  "license": "MIT",
+  "dependencies": {
+    "axe-core": "4.14.0",
+    "lighthouse": "13.6.0"
+  }
+}
